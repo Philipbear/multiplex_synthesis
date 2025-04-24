@@ -1,2 +1,3 @@
 # multiplex_synthesis
-source codes for data analysis in the multiplex synthesis paper
+
+This repository contains all the source codes for data analysis in the multiplex synthesis paper.
