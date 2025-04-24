@@ -1,6 +1,5 @@
 import pandas as pd
 import pickle
-from tqdm import tqdm
 
 
 def gen_data():
