@@ -3,7 +3,7 @@
 This repository contains all the source codes for data analysis in the multiplex synthesis paper.
 
 
-GNPS tasks:
+### GNPS tasks
 - https://gnps2.org/status?task=1b8f809f95a6422eaa965b4ff2840b86
 - https://gnps2.org/status?task=f469f8988ebc4898889d00a091663eb5
 - https://gnps2.org/status?task=7e2823735f104d6281ce89a7de5d93bd
