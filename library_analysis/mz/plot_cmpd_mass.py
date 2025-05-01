@@ -43,15 +43,15 @@ def plot_kde():
 
     # Customize the plot
     # plt.title("Mass distribution", fontsize=16)
-    plt.xlabel("Monoisotopic mass", fontsize=7.5, labelpad=1.5)
-    plt.ylabel("Density", fontsize=7.5, labelpad=3.5)
+    plt.xlabel("Monoisotopic mass", fontsize=7, labelpad=1.5)
+    plt.ylabel("Density", fontsize=7, labelpad=3.5)
     # Configure tick parameters for x-axis only
     ax.tick_params(axis='x', which='major', length=2, width=0.8, pad=1.5,
-                   colors='0', labelsize=6)
+                   colors='0', labelsize=5.5)
 
     # Remove y-axis tick labels but keep the axis itself
     ax.tick_params(axis='y', which='major', length=0, width=0.8, pad=1.5,
-                   colors='0', labelsize=6, labelleft=False)
+                   colors='0', labelsize=5.5, labelleft=False)
 
     # plt.grid(True, linestyle='--', alpha=0.7)
 

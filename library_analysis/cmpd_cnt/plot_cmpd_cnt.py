@@ -23,7 +23,7 @@ def plot_product_comparison():
 
     # Create the plot
     plt.rcParams['font.family'] = 'Arial'
-    fig, ax = plt.subplots(figsize=(3, 1.8))
+    fig, ax = plt.subplots(figsize=(2.7, 1.8))
 
     # Plot both lines
     plt.plot(valid_data['cumulative_reactions'], valid_data['cumulative_expected'],
@@ -32,10 +32,10 @@ def plot_product_comparison():
              label='Observed products', color='red', linewidth=1)
 
     # Add labels and title
-    ax.set_xlabel('Number of reactions', fontsize=7.5, labelpad=3.5)
-    ax.set_ylabel('Number of products', fontsize=7.5, labelpad=3.5)
+    ax.set_xlabel('Number of reactions', fontsize=7, labelpad=3.5)
+    ax.set_ylabel('Number of products', fontsize=7, labelpad=3.5)
     ax.tick_params(axis='both', which='major', length=2, width=0.8, pad=1.5,
-                   colors='0', labelsize=6)
+                   colors='0', labelsize=5.5)
     # Add thousand separators (commas) to axis labels
     ax.xaxis.set_major_formatter(ticker.StrMethodFormatter('{x:,.0f}'))
     ax.yaxis.set_major_formatter(ticker.StrMethodFormatter('{x:,.0f}'))
