@@ -55,6 +55,9 @@ def plot_kde():
 
     # plt.grid(True, linestyle='--', alpha=0.7)
 
+    for spine in ax.spines.values():
+        spine.set_linewidth(0.5)
+
     # Tight layout to ensure everything fits nicely
     plt.tight_layout()
 

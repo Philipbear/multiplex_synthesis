@@ -15,7 +15,7 @@ def get_ms2_lib_info(library_tsv, out_name):
              'EXACTMASS', 'ADDUCT']]
 
     # rename columns
-    df.columns = ['name', 'mz', 'scan', 'smiles', 'inchi', 'usi', 'exact_mass', 'adduct']
+    df.columns = ['name', 'exact_mass', 'scan', 'smiles', 'inchi', 'usi', 'mz', 'adduct']
 
     # Get all unique valid SMILES
     unique_smiles = df['smiles'].dropna().unique()
@@ -98,4 +98,4 @@ if __name__ == '__main__':
     get_ms2_lib_info('cleaned_data/ms2_all.tsv', 'cleaned_data/ms2_all_df.tsv')
     get_ms2_lib_info('cleaned_data/ms2_filtered.tsv', 'cleaned_data/ms2_filtered_df.tsv')
 
-    get_reactant_info()
+    # get_reactant_info()

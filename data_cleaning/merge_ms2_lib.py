@@ -40,6 +40,11 @@ def main(folder_path, out_tsv, out_mgf):
 
         df['FILENAME'] = os.path.basename(out_mgf)
         df['INCHIAUX'] = None
+        df['COMPOUND_NAME'] = df['COMPOUND_NAME'].apply(lambda x: x.replace('structural isomers', 'isomers').replace('peaks in run', 'peaks'))
+        # round to 5 decimal places
+        df['MOLECULEMASS'] = df['MOLECULEMASS'].apply(lambda x: round(x, 5))
+        df['EXACTMASS'] = df['EXACTMASS'].apply(lambda x: round(x, 5))
+        df['ADDUCT'] = df['ADDUCT'].apply(lambda x: x.split('[')[1].split(']')[0])
 
         # append df to tsv
         num_rows = append_df_to_tsv(df, out_tsv)
@@ -68,14 +73,14 @@ def write_mgf(spec_list, out_path, scans_start=0):
     with open(out_path, 'a', encoding='utf-8') as f:
         for spec in spec_list:
             f.write('BEGIN IONS\n')
-            f.write(f'NAME={spec["NAME"]}\n')
-            f.write(f'PEPMASS={spec["PEPMASS"]}\n')
+            # f.write(f'NAME={spec["NAME"]}\n')
+            # f.write(f'PEPMASS={spec["PEPMASS"]}\n')
             # f.write(f'MSLEVEL=2\n')
-            f.write(f'TITLE={spec["TITLE"]}\n')
-            f.write(f'SMILES={spec["SMILES"]}\n')
-            f.write(f'INCHI={spec["INCHI"]}\n')
+            # f.write(f'TITLE={spec["TITLE"]}\n')
+            # f.write(f'SMILES={spec["SMILES"]}\n')
+            # f.write(f'INCHI={spec["INCHI"]}\n')
             # f.write(f'INCHIAUX={spec["INCHIAUX"]}\n')
-            f.write(f'ADDUCT={spec["ADDUCT"]}\n')
+            # f.write(f'ADDUCT={spec["ADDUCT"]}\n')
             f.write(f'SCANS={scans_start}\n')
 
             mzs = spec['mz_ls']
@@ -141,11 +146,11 @@ def read_mgf_to_df(library_mgf):
 
 if __name__ == '__main__':
 
-    # main('raw_data/all', 'cleaned_data/ms2_all.tsv', 'cleaned_data/ms2_all.mgf')
-    # main('raw_data/filtered', 'cleaned_data/ms2_filtered.tsv', 'cleaned_data/ms2_filtered.mgf')
-    #
-    # df = pd.read_csv('cleaned_data/ms2_all.tsv', sep='\t', low_memory=False)
-    df = pd.read_csv('cleaned_data/ms2_filtered.tsv', sep='\t', low_memory=False)
+    main('raw_data/all', 'cleaned_data/ms2_all.tsv', 'cleaned_data/ms2_all.mgf')
+    main('raw_data/filtered', 'cleaned_data/ms2_filtered.tsv', 'cleaned_data/ms2_filtered.mgf')
 
-    print(df.shape)
-    print(df['INCHI'].nunique())
+    # df = pd.read_csv('cleaned_data/ms2_all.tsv', sep='\t', low_memory=False)
+    # df = pd.read_csv('cleaned_data/ms2_filtered.tsv', sep='\t', low_memory=False)
+
+    # print(df.shape)
+    # print(df['INCHI'].nunique())
