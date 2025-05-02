@@ -9,6 +9,12 @@ mgf: NAME, PEPMASS, MSLEVEL, TITLE, SMILES, INCHI, INCHIAUX, ADDUCT, SCANS
 
 def main(folder_path, out_tsv, out_mgf):
 
+    # remove output files if they exist
+    if os.path.isfile(out_tsv):
+        os.remove(out_tsv)
+    if os.path.isfile(out_mgf):
+        os.remove(out_mgf)
+
     # list all mgf files in the folder
     mgf_files = [f for f in os.listdir(folder_path) if f.endswith('.mgf')]
     mgf_files = sorted(mgf_files)
@@ -123,6 +129,9 @@ def read_mgf_to_df(library_mgf):
 
 if __name__ == '__main__':
 
-    main('raw_data/all', 'ms2_all.tsv', 'ms2_all.mgf')
-    main('raw_data/filtered', 'ms2_filtered.tsv', 'ms2_filtered.mgf')
+    main('raw_data/all', 'cleaned_data/ms2_all.tsv', 'cleaned_data/ms2_all.mgf')
+    # main('raw_data/filtered', 'cleaned_data/ms2_filtered.tsv', 'cleaned_data/ms2_filtered.mgf')
 
+    # df = pd.read_csv('ms2_all.tsv', sep='\t', low_memory=False)
+    # print(df.shape)
+    # print(df['INCHI'].nunique())

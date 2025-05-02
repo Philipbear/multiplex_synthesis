@@ -14,7 +14,7 @@ def clean_up_reaction_records():
     print('total number of records:', len(df))
 
     # save
-    df.to_csv('reaction_records.tsv', sep='\t', index=False)
+    df.to_csv('cleaned_data/reaction_records.tsv', sep='\t', index=False)
 
 
 

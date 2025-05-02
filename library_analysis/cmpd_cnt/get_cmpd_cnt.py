@@ -3,9 +3,9 @@ from tqdm import tqdm
 
 
 def gen_data():
-    df = pd.read_csv('../../raw_data/all_ms2_df.tsv', sep='\t', low_memory=False)
+    df = pd.read_csv('../../cleaned_data/ms2_all_df.tsv', sep='\t', low_memory=False)
 
-    reaction_records = pd.read_csv('../../raw_data/reaction_records.tsv', sep='\t')
+    reaction_records = pd.read_csv('../../cleaned_data/reaction_records.tsv', sep='\t')
 
     # reaction id
     df['reaction_id'] = df['TITLE'].apply(lambda x: x.split('.mz')[0].split(':')[2])  ######

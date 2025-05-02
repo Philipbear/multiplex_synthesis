@@ -123,13 +123,13 @@ def get_reactant_info():
                 df.at[i, '2d_inchikey'] = None
 
     # save
-    df.to_csv('all_reactants.tsv', sep='\t', index=False)
-    df.to_pickle('all_reactants.pkl')
+    df.to_csv('cleaned_data/all_reactants.tsv', sep='\t', index=False)
+    df.to_pickle('cleaned_data/all_reactants.pkl')
 
 
 if __name__ == '__main__':
 
-    # get_ms2_lib_info('ms2_all.mgf', 'ms2_all_df.tsv')
-    # get_ms2_lib_info('ms2_filtered.mgf', 'ms2_filtered_df.tsv')
+    # get_ms2_lib_info('cleaned_data/ms2_all.mgf', 'cleaned_data/ms2_all_df.tsv')
+    # get_ms2_lib_info('cleaned_data/ms2_filtered.mgf', 'cleaned_data/ms2_filtered_df.tsv')
 
     get_reactant_info()
