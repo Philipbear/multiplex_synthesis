@@ -31,14 +31,19 @@ def main(folder_path, out_tsv, out_mgf):
         scan_no = write_mgf(spec_list, out_mgf, scans_start=scan_no)
         print(f'Wrote {len(spec_list)} spectra')
 
-        tsv_path = os.path.join(folder_path, mgf.replace('.mgf', '.tsv'))
         # read tsv to df
+        tsv_path = os.path.join(folder_path, mgf.replace('.mgf', '.tsv'))
         df = pd.read_csv(tsv_path, sep='\t', low_memory=False)
+
         # renumber EXTRACTSCAN from scan_start
         df['EXTRACTSCAN'] = df['EXTRACTSCAN'].apply(lambda x: int(x) + scan_start - 1)
+
+        df['FILENAME'] = os.path.basename(out_mgf)
+        df['INCHIAUX'] = None
+
         # append df to tsv
         num_rows = append_df_to_tsv(df, out_tsv)
-        print(f'Appended {num_rows} spectra from {tsv_path}')
+        print(f'Appended {num_rows} spectra')
 
 
 def append_df_to_tsv(df, file_path):
@@ -65,11 +70,11 @@ def write_mgf(spec_list, out_path, scans_start=0):
             f.write('BEGIN IONS\n')
             f.write(f'NAME={spec["NAME"]}\n')
             f.write(f'PEPMASS={spec["PEPMASS"]}\n')
-            f.write(f'MSLEVEL=2\n')
+            # f.write(f'MSLEVEL=2\n')
             f.write(f'TITLE={spec["TITLE"]}\n')
             f.write(f'SMILES={spec["SMILES"]}\n')
             f.write(f'INCHI={spec["INCHI"]}\n')
-            f.write(f'INCHIAUX={spec["INCHIAUX"]}\n')
+            # f.write(f'INCHIAUX={spec["INCHIAUX"]}\n')
             f.write(f'ADDUCT={spec["ADDUCT"]}\n')
             f.write(f'SCANS={scans_start}\n')
 
@@ -77,7 +82,7 @@ def write_mgf(spec_list, out_path, scans_start=0):
             intensities = spec['intensity_ls']
             for mz, intensity in zip(mzs, intensities):
                 mz = round(mz, 5)
-                intensity = round(intensity, 4)
+                intensity = round(intensity, 2)
                 f.write(f'{mz} {intensity}\n')
 
             f.write('END IONS\n\n')
@@ -116,12 +121,19 @@ def read_mgf_to_df(library_mgf):
                     key, value = _line.split('=', 1)
                     spectrum[key] = value
                 else:
+
+                    ################### special case ###################
+                    if _line == 'NCCc1cc(O)c(O)cc1':
+                        spectrum['SMILES'] = _line
+                        continue
+
                     # if no '=', it is a spectrum pair
-                    this_mz, this_int = _line.split()
                     try:
+                        this_mz, this_int = _line.split()
                         mz_list.append(float(this_mz))
                         intensity_list.append(float(this_int))
                     except:
+                        print(_line)
                         continue
 
     return spectrum_list
@@ -129,9 +141,11 @@ def read_mgf_to_df(library_mgf):
 
 if __name__ == '__main__':
 
-    main('raw_data/all', 'cleaned_data/ms2_all.tsv', 'cleaned_data/ms2_all.mgf')
+    # main('raw_data/all', 'cleaned_data/ms2_all.tsv', 'cleaned_data/ms2_all.mgf')
     # main('raw_data/filtered', 'cleaned_data/ms2_filtered.tsv', 'cleaned_data/ms2_filtered.mgf')
+    #
+    # df = pd.read_csv('cleaned_data/ms2_all.tsv', sep='\t', low_memory=False)
+    df = pd.read_csv('cleaned_data/ms2_filtered.tsv', sep='\t', low_memory=False)
 
-    # df = pd.read_csv('ms2_all.tsv', sep='\t', low_memory=False)
-    # print(df.shape)
-    # print(df['INCHI'].nunique())
+    print(df.shape)
+    print(df['INCHI'].nunique())
