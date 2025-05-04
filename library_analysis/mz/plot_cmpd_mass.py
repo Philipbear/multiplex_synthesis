@@ -5,7 +5,7 @@ import seaborn as sns
 import pandas as pd
 
 
-def plot_kde():
+def plot(fig_size):
     # Load the pickle file
     with open('mono_mass_ls.pkl', 'rb') as f:
         mono_mass_ls = pickle.load(f)
@@ -15,14 +15,14 @@ def plot_kde():
 
     # Create a figure with appropriate size
     plt.rcParams['font.family'] = 'Arial'
-    fig, ax = plt.subplots(figsize=(2, 1))
+    fig, ax = plt.subplots(figsize=fig_size)
 
     # Create the KDE plot using seaborn
     sns.kdeplot(
         data=mono_mass_series,
-        fill=True,
-        color="0.1",
-        alpha=0.1,
+        fill=False,
+        color="#c7522a",
+        alpha=1,
         linewidth=1
     )
 
@@ -43,10 +43,10 @@ def plot_kde():
 
     # Customize the plot
     # plt.title("Mass distribution", fontsize=16)
-    plt.xlabel("Monoisotopic mass", fontsize=7, labelpad=1.5)
+    plt.xlabel("Monoisotopic mass", fontsize=7, labelpad=2)
     plt.ylabel("Density", fontsize=7, labelpad=3.5)
     # Configure tick parameters for x-axis only
-    ax.tick_params(axis='x', which='major', length=2, width=0.8, pad=1.5,
+    ax.tick_params(axis='x', which='major', length=2, width=0.5, pad=1,
                    colors='0', labelsize=5.5)
 
     # Remove y-axis tick labels but keep the axis itself
@@ -79,4 +79,4 @@ def plot_kde():
 
 
 if __name__ == '__main__':
-    plot_kde()
+    plot((2, 0.9))

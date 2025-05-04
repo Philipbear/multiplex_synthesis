@@ -41,5 +41,7 @@ Filtered libraries:
 - https://gnps2.org/status?task=721e011304c645aa822ff27fe52803e8
 - https://gnps2.org/status?task=a3451bb16848408c848847ddebd83712
 
+### GNPS tasks for library batch annotation
 
-
+- All library: https://gnps.ucsd.edu/ProteoSAFe/status.jsp?task=12be6c5c22a5486bba2679e8139edb41
+- Filtered library:https://gnps.ucsd.edu/ProteoSAFe/status.jsp?task=6d032deb2fb0489e83ce35a7e4542f76

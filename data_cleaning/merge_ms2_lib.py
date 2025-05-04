@@ -7,7 +7,7 @@ Merge mgf and tsv files (from GNPS2 workflow output) into one mgf file and one t
 mgf: NAME, PEPMASS, MSLEVEL, TITLE, SMILES, INCHI, INCHIAUX, ADDUCT, SCANS
 """
 
-def main(folder_path, out_tsv, out_mgf):
+def main(folder_path, out_tsv, out_mgf, start_name):
 
     # remove output files if they exist
     if os.path.isfile(out_tsv):
@@ -16,7 +16,9 @@ def main(folder_path, out_tsv, out_mgf):
         os.remove(out_mgf)
 
     # list all mgf files in the folder
-    mgf_files = [f for f in os.listdir(folder_path) if f.endswith('.mgf')]
+    # mgf_files = [f for f in os.listdir(folder_path) if f.endswith('.mgf')]
+    mgf_files = [f for f in os.listdir(folder_path) if f.endswith('.mgf') and f.startswith(start_name)]
+
     mgf_files = sorted(mgf_files)
 
     scan_no = 1
@@ -154,3 +156,4 @@ if __name__ == '__main__':
 
     # print(df.shape)
     # print(df['INCHI'].nunique())
+
