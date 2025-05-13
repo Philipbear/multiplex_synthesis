@@ -3,9 +3,10 @@
 This repository contains all the source codes for data analysis in the multiplex synthesis paper.
 
 
-### GNPS tasks for library generation
+### GNPS tasks
+#### GNPS tasks for library generation from mzML files
 
-All tasks can be accessed at GNPS2. The task links are listed below.
+All library:
 - https://gnps2.org/status?task=4ebeb1eeac934a1aaf804b7e3cb6d261
 - https://gnps2.org/status?task=8c06a49ac96943129619554238716ca0
 - https://gnps2.org/status?task=e3f90097f90d4e6498378c3d9f1eb63a
@@ -23,7 +24,7 @@ All tasks can be accessed at GNPS2. The task links are listed below.
 - https://gnps2.org/status?task=e7c9fc380f1a473bbeeb3158fd653418
 - https://gnps2.org/status?task=d2278d8aac4941fab75febd542639e0f
 
-Filtered libraries:
+Filtered library:
 - https://gnps2.org/status?task=c61f71bda0fe4fd69b5099cefd307722
 - https://gnps2.org/status?task=cc73db39afe14946a0ab014bffc882f3
 - https://gnps2.org/status?task=943fe4b392c3424493537320b15248c6
@@ -41,7 +42,7 @@ Filtered libraries:
 - https://gnps2.org/status?task=721e011304c645aa822ff27fe52803e8
 - https://gnps2.org/status?task=a3451bb16848408c848847ddebd83712
 
-### GNPS tasks for library batch annotation
+#### GNPS tasks for library batch annotation
 
 - All library: https://gnps.ucsd.edu/ProteoSAFe/status.jsp?task=12be6c5c22a5486bba2679e8139edb41
 - Filtered library:https://gnps.ucsd.edu/ProteoSAFe/status.jsp?task=6d032deb2fb0489e83ce35a7e4542f76
