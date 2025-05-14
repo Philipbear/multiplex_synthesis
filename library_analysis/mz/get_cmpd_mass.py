@@ -3,10 +3,10 @@ import pickle
 
 
 def gen_data():
-    df = pd.read_csv('../../raw_data/all_ms2_df.tsv', sep='\t', low_memory=False)
+    df = pd.read_pickle('../../data_cleaning/cleaned_data/ms2_all_df.pkl')
 
-    print('unique cmpd inchis:', len(df['INCHI'].unique()))
-    print('unique cmpd smiles:', len(df['SMILES'].unique()))
+    print('unique cmpd inchis:', len(df['inchi'].unique()))
+    print('unique cmpd smiles:', len(df['smiles'].unique()))
 
     # dereplicate by inchikey
     df = df.drop_duplicates(subset=['inchikey'], keep='first')
