@@ -175,3 +175,7 @@ cython_debug/
 *.pkl
 *.svg
 *.pptx
+
+/masst/data/
+/masst/deprecated/
+/masst/plot/
