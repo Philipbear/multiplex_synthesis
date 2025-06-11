@@ -8,17 +8,16 @@ from scipy.cluster import hierarchy
 from scipy.spatial import distance
 
 
-def load_masst_data(pkl_file_path):
+def load_masst_data(masst_pkl_path):
     """
     Load the generated MASST data from pickle file
     """
-    print(f"Loading MASST data from {pkl_file_path}...")
-    with open(pkl_file_path, 'rb') as f:
-        data = pickle.load(f)
+    print(f"Loading MASST data from {masst_pkl_path}...")
+    df = pd.read_pickle(masst_pkl_path)
     
-    data['name'] = data['name'].apply(lambda x: x.split('(known')[0])
-    print(f"Loaded dataset with {len(data):,} rows")
-    return data
+    df['name'] = df['name'].apply(lambda x: x.split('(known')[0])
+    print(f"Loaded dataset with {len(df):,} rows")
+    return df
 
 
 def get_microbemasst_datasets(file_path='masst/analysis/data/microbe_masst_table.csv'):
@@ -70,53 +69,53 @@ def analyze_microbe_distribution(masst_df, output_dirs,
     print(f"Total matches: {len(df)}")
     print(f"Microbe matches: {df['is_microbe_match'].sum()}")
     
-    # Count microbe matches per lib_scan
-    scan_microbe_counts = df[df['is_microbe_match']].groupby('lib_scan').size().reset_index()
-    scan_microbe_counts.columns = ['lib_scan', 'microbe_match_count']
-    
+    # Count microbe matches per lib_usi
+    usi_microbe_counts = df[df['is_microbe_match']].groupby('lib_usi').size().reset_index()
+    usi_microbe_counts.columns = ['lib_usi', 'microbe_match_count']
+
     # Count microbe matches per structure (inchikey_2d)
     structure_microbe_counts = df[(df['is_microbe_match']) & (df['inchikey_2d'].notna())].groupby('inchikey_2d').size().reset_index()
     structure_microbe_counts.columns = ['inchikey_2d', 'microbe_match_count']
     
-    # Get scan names for reference
-    scan_names = df[['lib_scan', 'name']].drop_duplicates().set_index('lib_scan')['name'].to_dict()
-    scan_microbe_counts['name'] = scan_microbe_counts['lib_scan'].map(scan_names)
-    
+    # Get USI names for reference
+    usi_names = df[['lib_usi', 'name']].drop_duplicates().set_index('lib_usi')['name'].to_dict()
+    usi_microbe_counts['name'] = usi_microbe_counts['lib_usi'].map(usi_names)
+
     # Get structure names for reference
     structure_names = df[['inchikey_2d', 'name']].drop_duplicates().set_index('inchikey_2d')['name'].to_dict()
     structure_microbe_counts['name'] = structure_microbe_counts['inchikey_2d'].map(structure_names)
-    
-    # Calculate total counts of scans and structures
-    total_scans = df['lib_scan'].nunique()
+
+    # Calculate total counts of USIs and structures
+    total_usis = df['lib_usi'].nunique()
     total_structures = df['inchikey_2d'].nunique()
-    
-    # Calculate percentage of scans and structures with microbe matches
-    scans_with_microbe = scan_microbe_counts['lib_scan'].nunique()
+
+    # Calculate percentage of USIs and structures with microbe matches
+    usis_with_microbe = usi_microbe_counts['lib_usi'].nunique()
     structures_with_microbe = structure_microbe_counts['inchikey_2d'].nunique()
-    
-    print(f"Library scans with microbe matches: {scans_with_microbe:,}/{total_scans:,} ({scans_with_microbe/total_scans*100:.1f}%)")
+
+    print(f"Library USIs with microbe matches: {usis_with_microbe:,}/{total_usis:,} ({usis_with_microbe/total_usis*100:.1f}%)")
     print(f"Unique structures with microbe matches: {structures_with_microbe:,}/{total_structures:,} ({structures_with_microbe/total_structures*100:.1f}%)")
     
     # Save match counts and metadata to files for later plotting
-    scan_microbe_counts.to_csv(f"{output_dirs['microbe']}/scan_microbe_match_counts.tsv", sep='\t', index=False)
+    usi_microbe_counts.to_csv(f"{output_dirs['microbe']}/usi_microbe_match_counts.tsv", sep='\t', index=False)
     structure_microbe_counts.to_csv(f"{output_dirs['microbe']}/structure_microbe_match_counts.tsv", sep='\t', index=False)
     
     # Save metadata about totals for plotting
     microbe_metadata = {
-        'total_scans': total_scans,
+        'total_usis': total_usis,
         'total_structures': total_structures,
-        'scans_with_microbe': scans_with_microbe,
+        'usis_with_microbe': usis_with_microbe,
         'structures_with_microbe': structures_with_microbe
     }
     
     pd.DataFrame([microbe_metadata]).to_csv(f"{output_dirs['microbe']}/microbe_analysis_metadata.tsv", sep='\t', index=False)
     
     return {
-        'scan_microbe_counts': scan_microbe_counts,
+        'usi_microbe_counts': usi_microbe_counts,
         'structure_microbe_counts': structure_microbe_counts,
-        'total_scans': total_scans,
+        'total_usis': total_usis,
         'total_structures': total_structures,
-        'scans_with_microbe': scans_with_microbe,
+        'usis_with_microbe': usis_with_microbe,
         'structures_with_microbe': structures_with_microbe
     }
 
@@ -373,14 +372,14 @@ def analyze_bodypart_distribution(masst_df, output_dirs):
     
     print(f"Found {len(human_df):,} human matches and {len(rodent_df):,} rodent matches with body part information")
     
-    # Analysis by MS/MS spectra
-    print("Analyzing MS/MS spectra distribution by body part...")
-    human_scan_counts = human_df.groupby('UBERONBodyPartName')['lib_scan'].nunique().reset_index()
-    human_scan_counts = human_scan_counts.rename(columns={'lib_scan': 'count'}).sort_values('count', ascending=False)
-    
-    rodent_scan_counts = rodent_df.groupby('UBERONBodyPartName')['lib_scan'].nunique().reset_index()
-    rodent_scan_counts = rodent_scan_counts.rename(columns={'lib_scan': 'count'}).sort_values('count', ascending=False)
-    
+    # Analysis by USI
+    print("Analyzing USI distribution by body part...")
+    human_usi_counts = human_df.groupby('UBERONBodyPartName')['lib_usi'].nunique().reset_index()
+    human_usi_counts = human_usi_counts.rename(columns={'lib_usi': 'count'}).sort_values('count', ascending=False)
+
+    rodent_usi_counts = rodent_df.groupby('UBERONBodyPartName')['lib_usi'].nunique().reset_index()
+    rodent_usi_counts = rodent_usi_counts.rename(columns={'lib_usi': 'count'}).sort_values('count', ascending=False)
+
     # Analysis by unique structures
     print("Analyzing unique structure distribution by body part...")
     human_structure_counts = human_df[human_df['inchikey_2d'].notna()].groupby('UBERONBodyPartName')['inchikey_2d'].nunique().reset_index()
@@ -390,8 +389,8 @@ def analyze_bodypart_distribution(masst_df, output_dirs):
     rodent_structure_counts = rodent_structure_counts.rename(columns={'inchikey_2d': 'count'}).sort_values('count', ascending=False)
     
     # Save data files
-    human_scan_counts.to_csv(f"{output_dirs['bodypart']}/human_bodypart_scan_counts.tsv", sep='\t', index=False)
-    rodent_scan_counts.to_csv(f"{output_dirs['bodypart']}/rodent_bodypart_scan_counts.tsv", sep='\t', index=False)
+    human_usi_counts.to_csv(f"{output_dirs['bodypart']}/human_bodypart_usi_counts.tsv", sep='\t', index=False)
+    rodent_usi_counts.to_csv(f"{output_dirs['bodypart']}/rodent_bodypart_usi_counts.tsv", sep='\t', index=False)
     human_structure_counts.to_csv(f"{output_dirs['bodypart']}/human_bodypart_structure_counts.tsv", sep='\t', index=False)
     rodent_structure_counts.to_csv(f"{output_dirs['bodypart']}/rodent_bodypart_structure_counts.tsv", sep='\t', index=False)
     
@@ -405,8 +404,8 @@ def analyze_bodypart_distribution(masst_df, output_dirs):
     rodent_compound_bodypart_counts.to_csv(f"{output_dirs['bodypart']}/rodent_compound_bodypart_counts.tsv", sep='\t', index=False)
     
     return {
-        'human_scan_counts': human_scan_counts,
-        'rodent_scan_counts': rodent_scan_counts,
+        'human_usi_counts': human_usi_counts,
+        'rodent_usi_counts': rodent_usi_counts,
         'human_structure_counts': human_structure_counts,
         'rodent_structure_counts': rodent_structure_counts
     }
@@ -427,18 +426,18 @@ def analyze_disease_distribution(masst_df, output_dirs):
     
     print(f"Found {len(df):,} matches with disease information")
     
-    # Analysis by MS/MS spectra
-    print("Analyzing MS/MS spectra distribution by disease...")
-    disease_scan_counts = df.groupby('DOIDCommonName')['lib_scan'].nunique().reset_index()
-    disease_scan_counts = disease_scan_counts.rename(columns={'lib_scan': 'count'}).sort_values('count', ascending=False)
-    
+    # Analysis by USI
+    print("Analyzing USI distribution by disease...")
+    disease_usi_counts = df.groupby('DOIDCommonName')['lib_usi'].nunique().reset_index()
+    disease_usi_counts = disease_usi_counts.rename(columns={'lib_usi': 'count'}).sort_values('count', ascending=False)
+
     # Analysis by unique structures
     print("Analyzing unique structure distribution by disease...")
     disease_structure_counts = df[df['inchikey_2d'].notna()].groupby('DOIDCommonName')['inchikey_2d'].nunique().reset_index()
     disease_structure_counts = disease_structure_counts.rename(columns={'inchikey_2d': 'count'}).sort_values('count', ascending=False)
      
     # Save data files
-    disease_scan_counts.to_csv(f"{output_dirs['disease']}/disease_scan_counts.tsv", sep='\t', index=False)
+    disease_usi_counts.to_csv(f"{output_dirs['disease']}/disease_usi_counts.tsv", sep='\t', index=False)
     disease_structure_counts.to_csv(f"{output_dirs['disease']}/disease_structure_counts.tsv", sep='\t', index=False)
        
     # Create raw data for heatmap - count MASST matches per compound-disease pair
@@ -446,7 +445,7 @@ def analyze_disease_distribution(masst_df, output_dirs):
     compound_disease_counts.to_csv(f"{output_dirs['disease']}/compound_disease_counts.tsv", sep='\t', index=False)
     
     return {
-        'disease_scan_counts': disease_scan_counts,
+        'disease_usi_counts': disease_usi_counts,
         'disease_structure_counts': disease_structure_counts
     }
 
@@ -465,10 +464,10 @@ def analyze_health_status(masst_df, output_dirs):
     
     print(f"Found {len(df):,} matches with health status information")
     
-    # Analysis by MS/MS spectra
-    print("Analyzing MS/MS spectra distribution by health status...")
-    health_scan_counts = df.groupby('HealthStatus')['lib_scan'].nunique().reset_index()
-    health_scan_counts = health_scan_counts.rename(columns={'lib_scan': 'count'}).sort_values('count', ascending=False)
+    # Analysis by USI
+    print("Analyzing USI distribution by health status...")
+    health_usi_counts = df.groupby('HealthStatus')['lib_usi'].nunique().reset_index()
+    health_usi_counts = health_usi_counts.rename(columns={'lib_usi': 'count'}).sort_values('count', ascending=False)
     
     # Analysis by unique structures
     print("Analyzing unique structure distribution by health status...")
@@ -476,7 +475,7 @@ def analyze_health_status(masst_df, output_dirs):
     health_structure_counts = health_structure_counts.rename(columns={'inchikey_2d': 'count'}).sort_values('count', ascending=False)
     
     # Save data files
-    health_scan_counts.to_csv(f"{output_dirs['health']}/health_status_scan_counts.tsv", sep='\t', index=False)
+    health_usi_counts.to_csv(f"{output_dirs['health']}/health_status_usi_counts.tsv", sep='\t', index=False)
     health_structure_counts.to_csv(f"{output_dirs['health']}/health_status_structure_counts.tsv", sep='\t', index=False)
     
     # Create raw data for heatmap - count MASST matches per compound-health status pair
@@ -484,7 +483,7 @@ def analyze_health_status(masst_df, output_dirs):
     compound_health_counts.to_csv(f"{output_dirs['health']}/compound_health_counts.tsv", sep='\t', index=False)
     
     return {
-        'health_scan_counts': health_scan_counts,
+        'health_usi_counts': health_usi_counts,
         'health_structure_counts': health_structure_counts
     }
     
@@ -533,6 +532,10 @@ def run_comprehensive_analysis(masst_pkl_path, output_base_dir="plots",
     # Load the MASST data
     masst_df = load_masst_data(masst_pkl_path)
     
+    # some prefiltering
+    # only consider conjugated products, remove starting materials
+    masst_df = masst_df[masst_df['name'].str.contains('_', na=False)]
+    
     # Create output directories
     output_dirs = create_output_directory(output_base_dir)
     
@@ -562,8 +565,8 @@ def make_all_plots():
     
     print(" === Body Part Plots ===")
     # Load data files
-    human_scan_counts = pd.read_csv(f"{output_dirs['bodypart']}/human_bodypart_scan_counts.tsv", sep='\t')
-    rodent_scan_counts = pd.read_csv(f"{output_dirs['bodypart']}/rodent_bodypart_scan_counts.tsv", sep='\t')
+    human_usi_counts = pd.read_csv(f"{output_dirs['bodypart']}/human_bodypart_usi_counts.tsv", sep='\t')
+    rodent_usi_counts = pd.read_csv(f"{output_dirs['bodypart']}/rodent_bodypart_usi_counts.tsv", sep='\t')
     human_structure_counts = pd.read_csv(f"{output_dirs['bodypart']}/human_bodypart_structure_counts.tsv", sep='\t')
     rodent_structure_counts = pd.read_csv(f"{output_dirs['bodypart']}/rodent_bodypart_structure_counts.tsv", sep='\t')
     human_compound_bodypart_counts = pd.read_csv(f"{output_dirs['bodypart']}/human_compound_bodypart_counts.tsv", sep='\t')
@@ -571,17 +574,17 @@ def make_all_plots():
         
     # Generate plots
     generate_top_bar_plot(
-        human_scan_counts.head(20), 
-        'UBERONBodyPartName', 
+        human_usi_counts.head(20),
+        'UBERONBodyPartName',
         'count',
         'Top 20 Human Body Parts by MS/MS Spectra',
         f"{output_dirs['bodypart']}/human_bodypart_scan_distribution.png",
         x_label='Number of MS/MS Spectra'
     )
-    
+
     generate_top_bar_plot(
-        rodent_scan_counts.head(20), 
-        'UBERONBodyPartName', 
+        rodent_usi_counts.head(20),
+        'UBERONBodyPartName',
         'count',
         'Top 20 Rodent Body Parts by MS/MS Spectra',
         f"{output_dirs['bodypart']}/rodent_bodypart_scan_distribution.png",
@@ -622,13 +625,13 @@ def make_all_plots():
     
     print(" === Disease Plots ===")
     # Load disease data files
-    disease_scan_counts = pd.read_csv(f"{output_dirs['disease']}/disease_scan_counts.tsv", sep='\t')
+    disease_usi_counts = pd.read_csv(f"{output_dirs['disease']}/disease_usi_counts.tsv", sep='\t')
     disease_structure_counts = pd.read_csv(f"{output_dirs['disease']}/disease_structure_counts.tsv", sep='\t')
     compound_disease_counts = pd.read_csv(f"{output_dirs['disease']}/compound_disease_counts.tsv", sep='\t')
     
     # Generate disease plots
     generate_top_bar_plot(
-        disease_scan_counts.head(20),
+        disease_usi_counts.head(20),
         'DOIDCommonName',
         'count',
         'Top 20 Diseases by MS/MS Spectra',
@@ -654,17 +657,17 @@ def make_all_plots():
     
     print(" === Health Status Plots ===")
     # Load health status data files
-    health_scan_counts = pd.read_csv(f"{output_dirs['health']}/health_status_scan_counts.tsv", sep='\t')
+    health_usi_counts = pd.read_csv(f"{output_dirs['health']}/health_status_usi_counts.tsv", sep='\t')
     health_structure_counts = pd.read_csv(f"{output_dirs['health']}/health_status_structure_counts.tsv", sep='\t')
     compound_health_counts = pd.read_csv(f"{output_dirs['health']}/compound_health_counts.tsv", sep='\t')
     
     # Generate health status plots
     generate_top_bar_plot(
-        health_scan_counts,
+        health_usi_counts,
         'HealthStatus',
         'count',
         'Health Status Distribution by MS/MS Spectra',
-        f"{output_dirs['health']}/health_status_scan_distribution.png",
+        f"{output_dirs['health']}/health_status_usi_distribution.png",
         x_label='Number of MS/MS Spectra'
     )
     
@@ -686,17 +689,17 @@ def make_all_plots():
     
     print(" === Generating Microbe Plots ===")    
     # Load microbe data files and metadata
-    scan_microbe_counts = pd.read_csv(f"{output_dirs['microbe']}/scan_microbe_match_counts.tsv", sep='\t')
+    usi_microbe_counts = pd.read_csv(f"{output_dirs['microbe']}/usi_microbe_match_counts.tsv", sep='\t')
     structure_microbe_counts = pd.read_csv(f"{output_dirs['microbe']}/structure_microbe_match_counts.tsv", sep='\t')
     metadata = pd.read_csv(f"{output_dirs['microbe']}/microbe_analysis_metadata.tsv", sep='\t').iloc[0].to_dict()
-    total_scans = metadata.get('total_scans')
+    total_usis = metadata.get('total_usis')
     total_structures = metadata.get('total_structures')
-    scans_with_microbe = metadata.get('scans_with_microbe')
+    usis_with_microbe = metadata.get('usis_with_microbe')
     structures_with_microbe = metadata.get('structures_with_microbe')
     
     # Generate bar plots for top items
     # create_top_items_plot(
-    #     scan_microbe_counts.sort_values('microbe_match_count', ascending=False).head(20),
+    #     usi_microbe_counts.sort_values('microbe_match_count', ascending=False).head(20),
     #     'name', 'microbe_match_count',
     #     'Top 20 MS/MS Spectra by Microbe Matches',
     #     f"{output_dirs['microbe']}/top_scan_microbe_matches.png",
@@ -713,11 +716,11 @@ def make_all_plots():
     
     # Create distribution plots
     create_microbe_match_distribution(
-        scan_microbe_counts,
-        total_scans,
-        scans_with_microbe,
-        'MS/MS Library Spectra',
-        f"{output_dirs['microbe']}/scan_microbe_match_distribution"
+        usi_microbe_counts,
+        total_usis,
+        usis_with_microbe,
+        'MS/MS Library USIs',
+        f"{output_dirs['microbe']}/usi_microbe_match_distribution"
     )
     
     create_microbe_match_distribution(
@@ -730,10 +733,10 @@ def make_all_plots():
     
     # Create pie charts
     create_microbe_presence_pie(
-        scans_with_microbe, 
-        total_scans - scans_with_microbe,
-        'MS/MS Library Spectra', 
-        f"{output_dirs['microbe']}/scan_microbe_presence_pie.png"
+        usis_with_microbe,
+        total_usis - usis_with_microbe,
+        'MS/MS Library USIs',
+        f"{output_dirs['microbe']}/usi_microbe_presence_pie.png"
     )
     
     create_microbe_presence_pie(
@@ -749,16 +752,16 @@ def make_all_plots():
 
 if __name__ == "__main__":
     # File paths
-    masst_pkl_path = '/home/shipei/projects/synlib/masst/data/all_masst_matches_redu.pkl'
+    masst_pkl_path = '/home/shipei/projects/synlib/masst/data/all_masst_matches_with_metadata.pkl'
     output_dir = 'plots'
     microbe_table_path = '/home/shipei/projects/microbe_masst/sql/microbe_masst_table.csv'
     
     # Run the analysis
-    # results = run_comprehensive_analysis(
-    #     masst_pkl_path, 
-    #     output_dir,
-    #     microbe_table_path
-    # )
+    results = run_comprehensive_analysis(
+        masst_pkl_path, 
+        output_dir,
+        microbe_table_path
+    )
     
     make_all_plots()
     

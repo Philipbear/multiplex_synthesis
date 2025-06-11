@@ -7,7 +7,7 @@ Merge mgf and tsv files (from GNPS2 workflow output) into one mgf file and one t
 mgf: NAME, PEPMASS, MSLEVEL, TITLE, SMILES, INCHI, INCHIAUX, ADDUCT, SCANS
 """
 
-def main(folder_path, out_tsv, out_mgf, start_name):
+def main(folder_path, out_tsv, out_mgf):
 
     # remove output files if they exist
     if os.path.isfile(out_tsv):
@@ -16,11 +16,10 @@ def main(folder_path, out_tsv, out_mgf, start_name):
         os.remove(out_mgf)
 
     # list all mgf files in the folder
-    # mgf_files = [f for f in os.listdir(folder_path) if f.endswith('.mgf')]
-    mgf_files = [f for f in os.listdir(folder_path) if f.endswith('.mgf') and f.startswith(start_name)]
-
+    mgf_files = [f for f in os.listdir(folder_path) if f.endswith('.mgf')]
     mgf_files = sorted(mgf_files)
 
+    all_df = pd.DataFrame()
     scan_no = 1
     for mgf in mgf_files:
         mgf_path = os.path.join(folder_path, mgf)
@@ -48,24 +47,12 @@ def main(folder_path, out_tsv, out_mgf, start_name):
         df['EXACTMASS'] = df['EXACTMASS'].apply(lambda x: round(x, 5))
         df['ADDUCT'] = df['ADDUCT'].apply(lambda x: x.split('[')[1].split(']')[0])
 
-        # append df to tsv
-        num_rows = append_df_to_tsv(df, out_tsv)
-        print(f'Appended {num_rows} spectra')
-
-
-def append_df_to_tsv(df, file_path):
-
-    # Check if file exists
-    file_exists = os.path.isfile(file_path)
-
-    if file_exists:
-        # Append without header
-        df.to_csv(file_path, sep='\t', mode='a', header=False, index=False, na_rep='N/A')
-    else:
-        # Create new file with header
-        df.to_csv(file_path, sep='\t', mode='w', header=True, index=False, na_rep='N/A')
-
-    return df.shape[0]  # Return number of rows appended
+        # append df to all_df
+        all_df = pd.concat([all_df, df], ignore_index=True)
+        print(f'Appended {len(df)} spectra')
+    
+    # write all_df to tsv
+    all_df.to_csv(out_tsv, sep='\t', index=False, na_rep='N/A')
 
 
 def write_mgf(spec_list, out_path, scans_start=0):
@@ -76,7 +63,7 @@ def write_mgf(spec_list, out_path, scans_start=0):
         for spec in spec_list:
             f.write('BEGIN IONS\n')
             # f.write(f'NAME={spec["NAME"]}\n')
-            # f.write(f'PEPMASS={spec["PEPMASS"]}\n')
+            f.write(f'PEPMASS={spec["PEPMASS"]}\n')
             # f.write(f'MSLEVEL=2\n')
             # f.write(f'TITLE={spec["TITLE"]}\n')
             # f.write(f'SMILES={spec["SMILES"]}\n')
@@ -151,9 +138,5 @@ if __name__ == '__main__':
     main('raw_data/all', 'cleaned_data/ms2_all.tsv', 'cleaned_data/ms2_all.mgf')
     main('raw_data/filtered', 'cleaned_data/ms2_filtered.tsv', 'cleaned_data/ms2_filtered.mgf')
 
-    # df = pd.read_csv('cleaned_data/ms2_all.tsv', sep='\t', low_memory=False)
-    # df = pd.read_csv('cleaned_data/ms2_filtered.tsv', sep='\t', low_memory=False)
 
-    # print(df.shape)
-    # print(df['INCHI'].nunique())
 

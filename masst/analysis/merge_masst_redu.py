@@ -12,22 +12,23 @@ NCBITaxonomy
 def merge_all(masst_path='masst/analysis/data/all_masst_matches.tsv',
               lib_path='data_cleaning/cleaned_data/ms2_all_df.pkl', 
               redu_path='masst/analysis/data/redu.tsv',
-              output_path='masst/analysis/data/all_masst_matches_redu.pkl'):
+              output_path='masst/analysis/data/all_masst_matches_redu.pkl',
+              min_freq=3):
     """
     Merge all MASST results with the library and redu dataframes.
     Ensures all MASST matches are mapped to all associated library scans.
     """
     print('Merging all data sources...')
     
-    # Prepare the MASST results
-    masst = prepare_all_masst_results(masst_path, lib_path)
-    print(f"MASST matches: {len(masst)} rows")
-    
     # Prepare the library dataframe
     lib = prepare_lib(lib_path)
     ######### for lib, keep unique USIs
     lib = lib.drop_duplicates(subset=['lib_usi']).reset_index(drop=True)
     print(f"Library entries: {len(lib)} rows")
+    
+    # Prepare the MASST results
+    masst = prepare_all_masst_results(masst_path, lib_path, min_freq)
+    print(f"MASST matches: {len(masst)} rows")
     
     # Prepare the redu dataframe
     redu = prepare_redu(redu_path)
@@ -36,10 +37,10 @@ def merge_all(masst_path='masst/analysis/data/all_masst_matches.tsv',
     # merge: match each lib_scan with all masst matches having the same lib_usi
     print('Merging library scans to all matching MASST results...')
     df = pd.merge(
-        lib,                 # library with scan info 
-        masst,               # masst matches
-        on='lib_usi',        # join on lib_usi
-        how='right',        # right join to keep all masst matches
+        masst,               # masst matches: 'lib_usi', 'mri', 'mri_scan'        
+        lib,                 # lib: 'lib_scan', 'lib_usi', 'name', 'inchikey_2d'
+        on='lib_usi',
+        how='left',        # left join to keep all masst matches
     )
     
     print(f"MASST matches: {len(df)} rows")
@@ -63,7 +64,7 @@ def merge_all(masst_path='masst/analysis/data/all_masst_matches.tsv',
 
 
 def prepare_all_masst_results(masst_path='masst/analysis/data/all_masst_matches.tsv',
-                               lib_path='data_cleaning/cleaned_data/ms2_all_df.pkl'):
+                              lib_path='data_cleaning/cleaned_data/ms2_all_df.pkl', min_freq=3):
     """
     Prepare all MASST results for analysis.
     """
@@ -71,21 +72,24 @@ def prepare_all_masst_results(masst_path='masst/analysis/data/all_masst_matches.
     # Load the MASST results
     df = pd.read_csv(masst_path, sep='\t')
     df = df[df['dataset'] != 'MSV000094559'].reset_index(drop=True)
+    df = df[['scan', 'USI']]
     
+    # Filter out low frequency matches
+    if min_freq > 1:
+        print(f"Before filtering, total scans: {df['scan'].nunique()}")
+        freq = df['scan'].value_counts()
+        valid_scans = freq[freq >= min_freq].index
+        df = df[df['scan'].isin(valid_scans)].reset_index(drop=True)
+        print(f"After filtering, total scans: {df['scan'].nunique()} (min_freq={min_freq})")
+
     # Load the library dataframe
     lib = pd.read_pickle(lib_path)
     
     # Merge the library dataframe with the MASST dataframe
     df = df.merge(lib[['scan', 'usi']], on='scan', how='left')
     
-    df = df.drop(columns=['dataset', 'scan'])
-    
-    # Rename the USI column in the merged dataframe
-    df.columns = ['delta_mass', 'matched_usi', 'cos', 'peak', 'lib_usi']
-        
-    # reorder the columns
-    # df = df[['lib_usi', 'matched_usi', 'delta_mass', 'cos', 'peak']]
-    df = df[['lib_usi', 'matched_usi']]
+    df = df[['usi', 'USI']]
+    df.columns = ['lib_usi', 'matched_usi']
     
     # Add the mri column
     df['mri'] = df['matched_usi'].apply(lambda x: x.split(':scan')[0].split('mzspec:')[1])
@@ -150,7 +154,28 @@ if __name__ == '__main__':
     output_path = '/home/shipei/projects/synlib/masst/data/all_masst_matches_with_metadata.pkl'
     
     # Run the merge function
-    merged_df = merge_all(masst_path, lib_path, redu_path, output_path)
+    merged_df = merge_all(masst_path, lib_path, redu_path, output_path, 3)
     
     # Print the first few rows of the merged dataframe
     print(merged_df.head())
+    
+    '''
+    Merging all data sources...
+    Preparing library dataframe...
+    Library entries: 129013 rows
+    Preparing all MASST results...
+    Before filtering, total scans: 58232
+    After filtering, total scans: 47819 (min_freq=3)
+    MASST matches: 293049773 rows
+    Preparing redu dataframe...
+    ReDU entries: 749984 rows
+    Merging library scans to all matching MASST results...
+    MASST matches: 293049773 rows
+    Unique library USIs with matches: 47819
+    Unique MRIs (matched datasets): 350179
+    Adding ReDU metadata...
+    Final merged dataset saved to: /home/shipei/projects/synlib/masst/data/all_masst_matches_with_metadata.pkl
+    Final merged dataset: 293049773 rows
+    Matches with ReDU metadata: 78948239 (26.9%)
+    '''
+    

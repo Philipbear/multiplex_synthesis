@@ -522,48 +522,48 @@ if __name__ == "__main__":
     counts_file_path = 'masst/analysis/data/match_counts.csv'
     plot_path = 'masst/analysis/plot'
     
-    # # Check if we need to generate the counts data
-    # if not os.path.exists(counts_file_path):
-    #     print("Generating match counts data...")
-    #     generate_match_counts(input_file=raw_data_path, output_file=counts_file_path)
-    # else:
-    #     print(f"Match counts data already exists at {counts_file_path}")
+    # Check if we need to generate the counts data
+    if not os.path.exists(counts_file_path):
+        print("Generating match counts data...")
+        generate_match_counts(input_file=raw_data_path, output_file=counts_file_path)
+    else:
+        print(f"Match counts data already exists at {counts_file_path}")
     
     
-    ##################
-    # # Create the histogram plot (unique 129K)
-    # print("Creating match distribution histogram...")
-    # plot_match_distribution(input_file=counts_file_path, save_path=plot_path)
+    #################
+    # Create the histogram plot (unique 129K)
+    print("Creating match distribution histogram...")
+    plot_match_distribution(input_file=counts_file_path, save_path=plot_path)
     
-    # # Create the scatter plot
-    # print("\nCreating match distribution scatter plot...")
-    # plot_match_scatter(input_file=counts_file_path, save_path=plot_path)
+    # Create the scatter plot
+    print("\nCreating match distribution scatter plot...")
+    plot_match_scatter(input_file=counts_file_path, save_path=plot_path)
     
     # #################
     # merge_masst_summary_with_spec_info()    
     # #################
     # Create the histogram plot for reference spectra (all 441K)
-    print("\nCreating reference spectra match distribution histogram...")
-    plot_ref_spec_match_distribution(
-        input_file='masst/analysis/data/match_counts_with_spec_info.tsv', 
-        save_path=plot_path,
-        group_by_2d_inchikey=False
-    )
-    plot_ref_spec_match_scatter(
-        input_file='masst/analysis/data/match_counts_with_spec_info.tsv', 
-        save_path=plot_path,
-        group_by_2d_inchikey=False
-    )
+    # print("\nCreating reference spectra match distribution histogram...")
+    # plot_ref_spec_match_distribution(
+    #     input_file='masst/analysis/data/match_counts_with_spec_info.tsv', 
+    #     save_path=plot_path,
+    #     group_by_2d_inchikey=False
+    # )
+    # plot_ref_spec_match_scatter(
+    #     input_file='masst/analysis/data/match_counts_with_spec_info.tsv', 
+    #     save_path=plot_path,
+    #     group_by_2d_inchikey=False
+    # )
     
-    # Create the histogram and scatter plots for unique structures
-    print("\nCreating unique structure match distribution plots...")
-    plot_ref_spec_match_distribution(
-        input_file='masst/analysis/data/match_counts_with_spec_info.tsv', 
-        save_path=plot_path,
-        group_by_2d_inchikey=True
-    )
-    plot_ref_spec_match_scatter(
-        input_file='masst/analysis/data/match_counts_with_spec_info.tsv', 
-        save_path=plot_path,
-        group_by_2d_inchikey=True
-    )
+    # # Create the histogram and scatter plots for unique structures
+    # print("\nCreating unique structure match distribution plots...")
+    # plot_ref_spec_match_distribution(
+    #     input_file='masst/analysis/data/match_counts_with_spec_info.tsv', 
+    #     save_path=plot_path,
+    #     group_by_2d_inchikey=True
+    # )
+    # plot_ref_spec_match_scatter(
+    #     input_file='masst/analysis/data/match_counts_with_spec_info.tsv', 
+    #     save_path=plot_path,
+    #     group_by_2d_inchikey=True
+    # )
