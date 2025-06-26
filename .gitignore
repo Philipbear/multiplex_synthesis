@@ -174,8 +174,16 @@ cython_debug/
 *.csv
 *.pkl
 *.svg
+*.png
 *.pptx
 
-/masst/data/
-/masst/deprecated/
-/masst/plot/
+data_cleaning/note.md
+data_cleaning/cleaned_data/
+data_cleaning/general/
+data_cleaning/raw_data/
+library_analysis/others/
+library_analysis/cmpd_class/deprecated/
+drug_data/
+/masst/analysis/data/
+/masst/analysis/deprecated/
+/masst/analysis/plots/
