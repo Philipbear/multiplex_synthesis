@@ -170,11 +170,11 @@ def _create_match_scatter_plot(counts_df, data_type, output_prefix):
     plt.rcParams['font.family'] = 'Arial'
     
     # Set up the plot (same size as original)
-    fig, ax = plt.subplots(figsize=(2.5, 1.35))
+    fig, ax = plt.subplots(figsize=(3.6, 1.85))
     
     # Plot scatter plot (same parameters as original)
     plt.scatter(range(len(counts_df)), counts_df['match_count'], 
-               alpha=0.5, s=0.8, color='steelblue', edgecolor='none')
+               alpha=0.65, s=1.8, color='steelblue', edgecolor='none')
     
     # Add log scale for y-axis
     plt.yscale('log')
@@ -183,20 +183,20 @@ def _create_match_scatter_plot(counts_df, data_type, output_prefix):
     
     # Add labels (same font size as original)
     if data_type == 'USI':
-        plt.xlabel('MS/MS library USI (sorted)', fontsize=6)
+        plt.xlabel('MS/MS library USI (sorted)', fontsize=8)
     else:
-        plt.xlabel('Unique chemical structure (sorted)', fontsize=6)
+        plt.xlabel('Unique chemical structure (sorted)', fontsize=8)
 
-    plt.ylabel('Number of MASST\nspectral matches', fontsize=6)
-    
+    plt.ylabel('Number of MASST\nspectral matches', fontsize=8)
+
     # Add tick parameters (exact same as original)
     plt.tick_params(axis='x', which='major', length=1, width=0.8, pad=1,
-                    colors='0.2', labelsize=5)
+                    colors='0.2', labelsize=6)
     plt.tick_params(axis='y', which='major', length=1, width=0.8, pad=1,
-                    colors='0.2', labelsize=5.5)
+                    colors='0.2', labelsize=6)
     plt.tick_params(axis='y', which='minor', length=0, width=0.8, pad=1,
-                    colors='0.2', labelsize=5.5)
-    
+                    colors='0.2', labelsize=6)
+
     # For x axis, add commas as thousands separator
     plt.gca().xaxis.set_major_formatter(plt.FuncFormatter(lambda x, _: f'{int(x):,}'))
     
@@ -211,9 +211,9 @@ def _create_match_scatter_plot(counts_df, data_type, output_prefix):
     stats_text_3 = f"≥ 5 MASST matches: {at_least_5_matches:,d} {data_type}s"
 
     x_pos = 0.30 if data_type == 'USI' else 0.24
-    plt.annotate(stats_text_1, xy=(x_pos, 0.75), xycoords='axes fraction', fontsize=5)
-    plt.annotate(stats_text_2, xy=(x_pos, 0.65), xycoords='axes fraction', fontsize=5)
-    plt.annotate(stats_text_3, xy=(x_pos, 0.55), xycoords='axes fraction', fontsize=5)
+    plt.annotate(stats_text_1, xy=(x_pos, 0.75), xycoords='axes fraction', fontsize=7)
+    plt.annotate(stats_text_2, xy=(x_pos, 0.65), xycoords='axes fraction', fontsize=7)
+    plt.annotate(stats_text_3, xy=(x_pos, 0.55), xycoords='axes fraction', fontsize=7)
 
     # Add grid (same parameters as original)
     plt.grid(True, alpha=0.3, linestyle='--', linewidth=0.5)
@@ -414,6 +414,6 @@ if __name__ == '__main__':
     
     #####
     # local, plot
-    # plot_masst_match_scatter()
+    plot_masst_match_scatter()
     
-    plot_venn_plots()
+    # plot_venn_plots()
