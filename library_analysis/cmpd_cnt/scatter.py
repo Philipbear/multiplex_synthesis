@@ -40,40 +40,46 @@ def create_dual_scatter_plot(df, column1, column2, figsize=(12, 8), save_path=No
 
     # Set y-axis limits
     y_max = max(sorted_df1[column1].max(), sorted_df2[column2].max())
-    ax.set_ylim(1, y_max * 1.2)
+    ax.set_ylim(1, y_max * 1.05)
+
+    # grid lines
+    ax.grid(which='major', linestyle='--', linewidth=0.3, color='0.8')
 
     # Plot the scatter points with different colors
-
     scatter2 = ax.scatter(x2, sorted_df2[column2],
                           color='#809bce',
-                          s=0.05,
+                          s=0.025,
                           alpha=1,
                           edgecolors='#809bce',  # Match to fill color to ensure fully filled dots
-                          label='MS/MS reference spectra')
+                          label='MS/MS spectra')
 
     scatter1 = ax.scatter(x1, sorted_df1[column1],
                           color='#c7522a',
-                          s=0.05,
+                          s=0.025,
                           alpha=1,
                           edgecolors='#c7522a',  # Match to fill color to ensure fully filled dots
-                          label='Structures observed')
+                          label='Unique structures')
 
 
-    ax.tick_params(axis='both', which='major', length=2, width=0.8, pad=1.5,
-                   colors='0', labelsize=5.5)
+    ax.tick_params(axis='x', which='major', length=1, width=0.8, pad=1,
+                   colors='0.2', labelsize=5.5)
+    
+    ax.tick_params(axis='y', which='major', length=1, width=0.8, pad=1,
+                   colors='0.2', labelsize=5.5)
 
     # Also set minor tick parameters for log scale
-    ax.tick_params(axis='y', which='minor', length=1, width=0.5, colors='0')
+    ax.tick_params(axis='y', which='minor', length=1, width=0.5, colors='0.2')
 
-    ax.set_xlabel('Synthesis reactions', fontsize=7)
-    ax.set_ylabel('Count', fontsize=7)
+    ax.set_xlabel('Synthesis reactions', fontsize=6, labelpad=2)
+    ax.set_ylabel('Count', fontsize=6, labelpad=3)
 
     # Add legend
-    legend = ax.legend(loc='upper right', fontsize=7, frameon=False, markerscale=8, handletextpad=0.1)
+    legend = ax.legend(loc='upper right', fontsize=5.5, frameon=False, markerscale=8, handletextpad=0.1)
 
     # Style adjustments
     for spine in ax.spines.values():
         spine.set_linewidth(0.5)
+        spine.set_color('0.2')
 
     # Tight layout
     plt.tight_layout()
@@ -82,14 +88,18 @@ def create_dual_scatter_plot(df, column1, column2, figsize=(12, 8), save_path=No
     if save_path:
         plt.savefig(save_path, bbox_inches='tight', format='svg', transparent=True)
 
-    # Show plot
-    plt.show()
+    # # Show plot
+    # plt.show()
 
 
 if __name__ == "__main__":
+    
+    import os
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    
     df = pd.read_csv('cmpd_cnt_summary.tsv', sep='\t', low_memory=False)
 
     # Create plot with both columns
     create_dual_scatter_plot(df, 'observed_cmpd_no', 'observed_spec_no',
-                             figsize=(2.8, 1.8),
+                             figsize=(2.15, 1.18),
                              save_path='dual_scatter_plot.svg')

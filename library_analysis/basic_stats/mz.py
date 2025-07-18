@@ -23,7 +23,7 @@ def gen_data():
         pickle.dump(mono_mass_ls, f)
 
 
-def plot(fig_size):
+def plot_mz(fig_size):
     # Load the pickle file
     with open('library_analysis/basic_stats/data/mono_mass_ls.pkl', 'rb') as f:
         mono_mass_ls = pickle.load(f)
@@ -47,6 +47,8 @@ def plot(fig_size):
     # Determine min and max values for setting x-axis limits
     min_mass = min(mono_mass_ls)
     max_mass = max(mono_mass_ls)
+    
+    print(f"Min mass: {min_mass}, Max mass: {max_mass}")
 
     # Round down min to nearest 250 and round up max to nearest 250
     min_tick = int(min_mass // 250) * 250
@@ -58,34 +60,36 @@ def plot(fig_size):
     # Set the custom tick positions and labels
     ax.set_xticks(x_ticks)
     ax.set_xticklabels([str(int(x)) for x in x_ticks], fontsize=6)
+    
+    # Set the x-axis limits
+    ax.set_xlim(0, 1500)
 
     # Customize the plot
     # plt.title("Mass distribution", fontsize=16)
-    plt.xlabel("Monoisotopic mass", fontsize=7, labelpad=2)
-    plt.ylabel("Density", fontsize=7, labelpad=3.5)
-    # Configure tick parameters for x-axis only
-    ax.tick_params(axis='x', which='major', length=2, width=0.5, pad=1,
-                   colors='0', labelsize=5.5)
+    plt.xlabel("Monoisotopic mass", fontsize=8, labelpad=3)
+    plt.ylabel("Density", fontsize=8, labelpad=3.5)
 
-    # Remove y-axis tick labels but keep the axis itself
-    ax.tick_params(axis='y', which='major', length=0, width=0.8, pad=1.5,
-                   colors='0', labelsize=5.5, labelleft=False)
+    ax.tick_params(axis='x', which='major', length=2, width=0.8, pad=1,
+                   colors='0.4', labelsize=6.5)
+    
+    # Set y-ticks to be empty
+    ax.tick_params(axis='y', which='major', length=1, width=0.8, pad=1,
+                   colors='0.4', labelsize=6.5, labelleft=False)
 
     # plt.grid(True, linestyle='--', alpha=0.7)
 
     for spine in ax.spines.values():
         spine.set_linewidth(0.5)
+        spine.set_color('0.4')
 
     # Tight layout to ensure everything fits nicely
     plt.tight_layout()
 
     # Save the plot as SVG
     plt.savefig("library_analysis/basic_stats/data/mono_mass_distribution.svg", format="svg", bbox_inches="tight", transparent=True)
-    # Save the plot as PNG
-    plt.savefig("library_analysis/basic_stats/data/mono_mass_distribution.png", format="png", bbox_inches="tight", transparent=True, dpi=300)
 
     # Display the plot (optional)
-    plt.show()
+    # plt.show()
 
     print(f"KDE plot saved as 'mono_mass_distribution.svg'")
 
@@ -100,4 +104,4 @@ def plot(fig_size):
 
 if __name__ == '__main__':
     # gen_data()
-    plot((2, 0.9))
+    plot_mz((2.5, 1.1))

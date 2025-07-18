@@ -176,6 +176,8 @@ cython_debug/
 *.svg
 *.png
 *.pptx
+*.npy
+*.txt
 
 data_cleaning/note.md
 data_cleaning/cleaned_data/

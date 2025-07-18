@@ -60,7 +60,7 @@ def get_all_matches_on_server(result_dir, n_cores=None):
     all_df.to_csv('all_masst_matches.tsv', sep='\t', index=False)
     
     # Filter and save the filtered results
-    filtered_df = all_df[all_df['dataset'] != 'MSV000094559']
+    filtered_df = all_df[~all_df['dataset'].isin(['MSV000094559', 'MSV000094447'])]
     
     print(f"Processed {len(valid_dfs)} files, resulting in {len(all_df)} total rows")
     print(f"After filtering, {len(filtered_df)} rows remain")

@@ -50,7 +50,9 @@ def merge_all(masst_path='masst/analysis/data/all_masst_matches.tsv',
     # Merge with redu dataframe to add metadata
     print('Adding ReDU metadata...')
     final_df = df.merge(redu, on='mri', how='left')
-    
+
+    # final cols: 'lib_usi', 'mri', 'mri_scan', 'lib_scan', 'name', 'inchikey_2d', 'NCBITaxonomy', 'UBERONBodyPartName', 'DOIDCommonName', 'HealthStatus'
+
     # save
     final_df.to_pickle(output_path)
     print(f"Final merged dataset saved to: {output_path}")
@@ -64,14 +66,14 @@ def merge_all(masst_path='masst/analysis/data/all_masst_matches.tsv',
 
 
 def prepare_all_masst_results(masst_path='masst/analysis/data/all_masst_matches.tsv',
-                              lib_path='data_cleaning/cleaned_data/ms2_all_df.pkl', min_freq=3):
+                              lib_path='data_cleaning/cleaned_data/ms2_all_df.pkl', min_freq=1):
     """
     Prepare all MASST results for analysis.
     """
     print('Preparing all MASST results...')
     # Load the MASST results
     df = pd.read_csv(masst_path, sep='\t')
-    df = df[df['dataset'] != 'MSV000094559'].reset_index(drop=True)
+    df = df[~df['dataset'].isin(['MSV000094559', 'MSV000094447'])].reset_index(drop=True)
     df = df[['scan', 'USI']]
     
     # Filter out low frequency matches
@@ -132,11 +134,14 @@ def prepare_lib(lib_path='data_cleaning/cleaned_data/ms2_all_df.pkl'):
         ['name', 'exact_mass', 'scan', 'smiles', 'inchi', 'usi', 'mz', 'adduct',
        'formula', 'inchikey', '2d_inchikey']
     '''
-    # lib = lib[['scan', 'usi', 'name', 'exact_mass', 'adduct', 'inchikey', '2d_inchikey']]
-    lib = lib[['scan', 'usi', 'name', '2d_inchikey']]
-    lib = lib.rename(columns={'usi': 'lib_usi', '2d_inchikey': 'inchikey_2d', 'scan': 'lib_scan'})
+    lib = lib[['scan', 'usi', 'name', 'exact_mass', 'adduct', 'mz', '2d_inchikey']]
+    lib = lib.rename(columns={'usi': 'lib_usi', 
+                              'exact_mass': 'prec_mz',
+                              'mz': 'mono_mass',
+                              '2d_inchikey': 'inchikey_2d', 
+                              'scan': 'lib_scan'})
     
-    return lib   # lib: 'lib_scan', 'lib_usi', 'name', 'inchikey_2d'
+    return lib   # lib: 'lib_scan', 'lib_usi', 'name', 'prec_mz', 'adduct', 'mono_mass', 'inchikey_2d'
 
 
 
@@ -154,7 +159,7 @@ if __name__ == '__main__':
     output_path = '/home/shipei/projects/synlib/masst/data/all_masst_matches_with_metadata.pkl'
     
     # Run the merge function
-    merged_df = merge_all(masst_path, lib_path, redu_path, output_path, 3)
+    merged_df = merge_all(masst_path, lib_path, redu_path, output_path, 1)
     
     # Print the first few rows of the merged dataframe
     print(merged_df.head())
@@ -164,18 +169,18 @@ if __name__ == '__main__':
     Preparing library dataframe...
     Library entries: 129013 rows
     Preparing all MASST results...
-    Before filtering, total scans: 58232
-    After filtering, total scans: 47819 (min_freq=3)
-    MASST matches: 293049773 rows
+    Before filtering, total scans: 57378
+    After filtering, total scans: 47156 (min_freq=3)
+    MASST matches: 292842443 rows
     Preparing redu dataframe...
     ReDU entries: 749984 rows
     Merging library scans to all matching MASST results...
-    MASST matches: 293049773 rows
-    Unique library USIs with matches: 47819
-    Unique MRIs (matched datasets): 350179
+    MASST matches: 292842443 rows
+    Unique library USIs with matches: 47156
+    Unique MRIs (matched datasets): 350087
     Adding ReDU metadata...
     Final merged dataset saved to: /home/shipei/projects/synlib/masst/data/all_masst_matches_with_metadata.pkl
-    Final merged dataset: 293049773 rows
-    Matches with ReDU metadata: 78948239 (26.9%)
+    Final merged dataset: 292842443 rows
+    Matches with ReDU metadata: 78948189 (27.0%)
     '''
     

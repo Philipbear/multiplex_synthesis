@@ -7,7 +7,7 @@ from utils import smiles_to_formula_inchikey, smiles_to_npclassifier, calc_monoi
 from tqdm import tqdm
 
 
-def get_ms2_lib_info(library_tsv, out_name):
+def get_ms2_lib_info(library_tsv, out_name, get_npclassifier=False):
 
     df = pd.read_csv(library_tsv, sep='\t', low_memory=False)
 
@@ -33,21 +33,30 @@ def get_ms2_lib_info(library_tsv, out_name):
         else:
             inchikey_2d = None
 
-        # np_class, np_superclass, np_pathway = smiles_to_npclassifier(smiles)
+        if get_npclassifier:
+            np_class, np_superclass, np_pathway = smiles_to_npclassifier(smiles)
 
-        # Store all results in dictionary
-        smiles_data[smiles] = {
-            'formula': formula,
-            'inchikey': inchikey,
-            '2d_inchikey': inchikey_2d,
-            # 'np_class': np_class,
-            # 'np_superclass': np_superclass,
-            # 'np_pathway': np_pathway
-        }
+            # Store all results in dictionary
+            smiles_data[smiles] = {
+                'formula': formula,
+                'inchikey': inchikey,
+                '2d_inchikey': inchikey_2d,
+                'np_class': np_class,
+                'np_superclass': np_superclass,
+                'np_pathway': np_pathway
+            }
+        else:
+            smiles_data[smiles] = {
+                'formula': formula,
+                'inchikey': inchikey,
+                '2d_inchikey': inchikey_2d
+            }
 
     # Fill the dataframe using the precomputed values
-    # info_cols = ['formula', 'inchikey', '2d_inchikey', 'np_class', 'np_superclass', 'np_pathway']
-    info_cols = ['formula', 'inchikey', '2d_inchikey']
+    if get_npclassifier:
+        info_cols = ['formula', 'inchikey', '2d_inchikey', 'np_class', 'np_superclass', 'np_pathway']
+    else:
+        info_cols = ['formula', 'inchikey', '2d_inchikey']
     for column in info_cols:
         df[column] = None  # Initialize columns with None
 
@@ -67,6 +76,5 @@ def get_ms2_lib_info(library_tsv, out_name):
 
 if __name__ == '__main__':
 
-    get_ms2_lib_info('cleaned_data/ms2_all.tsv', 'cleaned_data/ms2_all_df.tsv')
+    get_ms2_lib_info('cleaned_data/ms2_all.tsv', 'cleaned_data/ms2_all_df.tsv', get_npclassifier=False)
     get_ms2_lib_info('cleaned_data/ms2_filtered.tsv', 'cleaned_data/ms2_filtered_df.tsv')
-

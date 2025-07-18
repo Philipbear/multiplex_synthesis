@@ -22,7 +22,7 @@ def gen_data():
         # group by unique_sample_id, count the unique SMILES
         cmpd_summary_df = cmpd_df.groupby('unique_sample_id')['SMILES'].nunique().reset_index()
         cmpd_summary_df = cmpd_summary_df.rename(columns={
-            'unique_sample_id':'reaction_id',
+            'unique_sample_id': 'reaction_id',
             'SMILES': 'expected_cmpd_no'
         })
         all_summary_df = pd.concat([all_summary_df, cmpd_summary_df], ignore_index=True)
@@ -37,5 +37,7 @@ def gen_data():
 
 
 if __name__ == '__main__':
+    import os
+    os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
     gen_data()

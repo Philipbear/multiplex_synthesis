@@ -25,17 +25,23 @@ def plot_isomers(filtered=False, save_path='library_analysis/basic_stats/data'):
         os.makedirs(save_path)
     
     # Set style
-    sns.set_style("whitegrid")
-    plt.figure(figsize=(10, 6))
+    sns.set_style("whitegrid", {'axes.grid': True, 'grid.linestyle': '--', 'grid.linewidth': 0.5})
+    plt.figure(figsize=(4, 2))
     
     # Plot histogram
     ax = sns.histplot(data=df, x='isomer_count', binwidth=1, kde=False)
     
     # Add labels and title
-    plt.xlabel('Number of Isomers')
-    plt.ylabel('Count')
+    plt.xlabel('Number of isomers', fontsize=6, labelpad=2)
+    plt.ylabel('Count', fontsize=6, labelpad=2)
     title = 'Distribution of Isomer Counts' + (' (Filtered)' if filtered else '')
-    plt.title(title)
+    # plt.title(title)
+    
+    # tick parameters
+    plt.tick_params(axis='x', which='major', length=1, width=0.8, pad=1,
+                    colors='0.2', labelsize=5.5)
+    plt.tick_params(axis='y', which='major', length=1, width=0.8, pad=1,
+                    colors='0.2', labelsize=5.5)
     
     # x axis limits
     plt.xlim(0, 50)
@@ -52,7 +58,7 @@ def plot_isomers(filtered=False, save_path='library_analysis/basic_stats/data'):
                  f"≤3 isomers: {less_than_eq_3:.1f}%\n"
                  f"≤5 isomers: {less_than_eq_5:.1f}%")
     
-    plt.annotate(stats_text, xy=(0.7, 0.8), xycoords='axes fraction', 
+    plt.annotate(stats_text, xy=(0.7, 0.6), xycoords='axes fraction', fontsize=6,
                  bbox=dict(boxstyle="round,pad=0.5", facecolor='white', alpha=0.7))
     
     # Adjust layout
@@ -63,10 +69,11 @@ def plot_isomers(filtered=False, save_path='library_analysis/basic_stats/data'):
     save_file = os.path.join(save_path, filename)
     plt.savefig(save_file, format='svg', bbox_inches='tight')
     print(f"Figure saved to: {save_file}")
-    # save as PNG
-    save_file_png = os.path.join(save_path, filename.replace('.svg', '.png'))
-    plt.savefig(save_file_png, format='png', bbox_inches='tight', dpi=300)
-    print(f"Figure saved to: {save_file_png}")
+    
+    # # save as PNG
+    # save_file_png = os.path.join(save_path, filename.replace('.svg', '.png'))
+    # plt.savefig(save_file_png, format='png', bbox_inches='tight', dpi=300)
+    # print(f"Figure saved to: {save_file_png}")
     
     # Show plot
     plt.show()
@@ -76,4 +83,4 @@ def plot_isomers(filtered=False, save_path='library_analysis/basic_stats/data'):
 if __name__ == "__main__":
     # Plot both versions
     plot_isomers(filtered=False)
-    plot_isomers(filtered=True)
+    # plot_isomers(filtered=True)
