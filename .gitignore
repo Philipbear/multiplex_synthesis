@@ -178,6 +178,7 @@ cython_debug/
 *.pptx
 *.npy
 *.txt
+*.mzML
 
 data_cleaning/note.md
 data_cleaning/cleaned_data/
