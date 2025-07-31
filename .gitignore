@@ -179,6 +179,10 @@ cython_debug/
 *.npy
 *.txt
 *.mzML
+*.html
+*.json
+*.pdf
+*.ai
 
 data_cleaning/note.md
 data_cleaning/cleaned_data/

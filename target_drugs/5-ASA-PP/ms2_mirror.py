@@ -133,8 +133,8 @@ def create_mirror_plot(peaks_1, peaks_2, fig_size=(3.6, 2.2),
 
 if __name__ == "__main__":
 
-    ref = get_spectrum_by_scan('target_drugs/ibuprofen-carnitine/mzml/100nM_STANDARD_MIX.mzML', [1917])[0]
-    bio = get_spectrum_by_scan('target_drugs/ibuprofen-carnitine/mzml/IBD_BIOLOGICAL_2.mzML', [1781])[0]
+    ref = get_spectrum_by_scan('target_drugs/5-ASA-PP/mzml/std.mzML', [9396])[0]
+    bio = get_spectrum_by_scan('target_drugs/5-ASA-PP/mzml/sample.mzML', [11693])[0]
 
     peaks_1 = np.column_stack((ref['mz_ls'], ref['intensity_ls']))
     peaks_2 = np.column_stack((bio['mz_ls'], bio['intensity_ls']))
@@ -142,18 +142,18 @@ if __name__ == "__main__":
                        fig_size=(2, 1.2),
                        ms2_tol=0.05, peak_int_power=1.0,
                        intensity_threshold_label=50, label_decimals=2,
-                       max_x=385,
+                       max_x=300,
                        up_matched_peak_color='#c7522a', down_matched_peak_color='#008585',
                        up_spec_peak_color='0.6', down_spec_peak_color='0.6',
                        show_unmatched_peaks=True, title=None,
-                       save=True, output_name='target_drugs/ibuprofen-carnitine/plots/mirror_plot.svg')
+                       save=True, output_name='target_drugs/5-ASA-PP/plots/mirror_plot.svg')
 
 
     from matchms import Spectrum
     from matchms.similarity import CosineGreedy
 
-    spec_1 = Spectrum(mz=ref['mz_ls'], intensities=ref['intensity_ls'], metadata={'precursor_mz': 350.2326})
-    spec_2 = Spectrum(mz=bio['mz_ls'], intensities=bio['intensity_ls'], metadata={'precursor_mz': 350.2326})
+    spec_1 = Spectrum(mz=ref['mz_ls'], intensities=ref['intensity_ls'], metadata={'precursor_mz': 286.1074})
+    spec_2 = Spectrum(mz=bio['mz_ls'], intensities=bio['intensity_ls'], metadata={'precursor_mz': 286.1074})
 
     # construct a similarity function
     cosine_greedy = CosineGreedy(tolerance=0.05)
