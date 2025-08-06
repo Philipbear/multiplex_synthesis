@@ -1,5 +1,5 @@
 # active users: 13/31, 5/20, 1/2
-# healthy controls: 0/26, 1/4, 0/15
+# healthy controls: 0/26, 0/0, 0/15
 
 # conduct Fisher's exact test for 5-ASA use
 
@@ -13,7 +13,7 @@ from scipy.stats import fisher_exact
 # Columns: Drug Detected, Drug Not Detected
 contingency_table = np.array([
     [19, 34],  # Active users: 19 detected, 34 not detected
-    [1, 44]    # Controls: 1 detected, 44 not detected
+    [0, 41]    # Controls: 0 detected, 41 not detected
 ])
 
 print("Contingency Table:")

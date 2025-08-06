@@ -37,6 +37,10 @@ def load_data():
     print("5-ASA Current use counts:", df['5ASA_current_use'].value_counts())
     print("5-ASA Exposure categories:", df['5ASA_exposure_category'].value_counts())
     
+    # Prior users, how many intensities are > 1
+    prior_users = df[df['5ASA_prior_use'] == True]['intensity'] > 1
+    print("Prior users with intensity > 1:", prior_users.sum())
+    
     # active users, how many intensities are > 1
     active_users = df[df['5ASA_current_use'] == True]['intensity'] > 1
     print("Active users with intensity > 1:", active_users.sum())
