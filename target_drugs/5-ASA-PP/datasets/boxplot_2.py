@@ -23,7 +23,7 @@ def load_data():
         elif row['5ASA_prior_use']:
             return 'Prior use only'
         else:
-            return 'No exposure/unknown'
+            return 'Unknown'
     
     df['5ASA_exposure_category'] = df.apply(get_exposure_category, axis=1)
 
@@ -62,7 +62,7 @@ def create_boxplot(df, output_path):
     colors = {
         'Current use': '#e74c3c',           # Red
         'Prior use only': '#f39c12',        # Orange
-        'No exposure/unknown': '#3498db'    # Blue
+        'Unknown': '#3498db'    # Blue
     }
     
     # Create box plot based on current use groups
@@ -96,7 +96,7 @@ def create_boxplot(df, output_path):
         group_df = df[df['current_use_group'] == use_group]
         
         # Separate by 5-ASA exposure category
-        exposure_categories = ['No exposure/unknown', 'Prior use only', 'Current use']
+        exposure_categories = ['Unknown', 'Prior use only', 'Current use']
         
         for category in exposure_categories:
             category_data = group_df[group_df['5ASA_exposure_category'] == category]
