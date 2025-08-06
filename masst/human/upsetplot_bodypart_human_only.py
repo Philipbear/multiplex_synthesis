@@ -46,13 +46,14 @@ def create_upset_plot_by_usi(tsv_path, output_path, figsize=(8.6, 2.15), min_sub
         upset_data,
         subset_size='count',
         intersection_plot_elements=5,
-        totals_plot_elements=2,
+        totals_plot_elements=3,
         min_subset_size=min_subset_size,
         show_counts=True,
         sort_by='cardinality',
         sort_categories_by='-cardinality',
-        element_size=4.2,
+        element_size=4,
         facecolor='0.5',
+        connecting_line_width=1  # adjusted `upsetplot` package, add this parameter
     )
     
     # Generate the plot
@@ -120,7 +121,7 @@ def create_upset_plot_by_usi(tsv_path, output_path, figsize=(8.6, 2.15), min_sub
                 text.set_position((x + x_offset, y))
                 text.set_ha('right')
                 text.set_va('center')
-                text.set_fontsize(5)
+                text.set_fontsize(4.5)
                 
                 current_text = text.get_text()
                 if current_text.isdigit():

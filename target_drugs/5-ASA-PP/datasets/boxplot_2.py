@@ -92,7 +92,7 @@ def create_boxplot(df, output_path):
         group_df = df[df['current_use_group'] == use_group]
         
         # Separate by 5-ASA exposure category
-        exposure_categories = ['No exposure/unknown', 'Prior use only', 'Current use' ]
+        exposure_categories = ['No exposure/unknown', 'Prior use only', 'Current use']
         
         for category in exposure_categories:
             category_data = group_df[group_df['5ASA_exposure_category'] == category]
