@@ -17,6 +17,10 @@ def load_data():
 
     print("5-ASA use counts:", df['5ASA_use'].value_counts())
     print("Use groups:", df['use_group'].value_counts())
+    
+    # active users, how many intensities are > 1
+    active_users = df[df['5ASA_use'] == True]['Peak_Area'] > 1
+    print("Active users with intensity > 1:", active_users.sum())
 
     return df
 
