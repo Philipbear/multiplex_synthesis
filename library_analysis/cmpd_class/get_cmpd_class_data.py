@@ -4,13 +4,13 @@ from tqdm import tqdm
 
 def main():
     """Process a single TSV file and return categorized data."""
-    reactants_df = pd.read_pickle('/Users/shipei/Documents/projects/multiplex_synthesis/data_cleaning/cleaned_data/all_reactants.pkl')
+    reactants_df = pd.read_pickle('/Users/shipei/Documents/projects/multiplex_synthesis/all_lib/data/all_reactants.pkl')
     # compound_name to lower
     reactants_df['compound_name'] = reactants_df['compound_name'].str.lower()
     # dict from name to class
     name_to_class_dict = reactants_df.set_index('compound_name')['np_pathway'].to_dict()
 
-    df = pd.read_pickle('../../data_cleaning/cleaned_data/ms2_all_df.pkl')
+    df = pd.read_pickle('/Users/shipei/Documents/projects/multiplex_synthesis/all_lib/data/ms2_all_df.pkl')
     
     # contain '_' in name
     df = df[df['name'].str.contains('_')].reset_index(drop=True)

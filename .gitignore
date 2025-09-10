@@ -184,13 +184,12 @@ cython_debug/
 *.pdf
 *.ai
 
-data_cleaning/note.md
-data_cleaning/cleaned_data/
-data_cleaning/general/
-data_cleaning/raw_data/
+all_lib/_deprecated/
+all_lib/raw_data/
+all_lib/general/
+tasks.md
 library_analysis/others/
 library_analysis/cmpd_class/deprecated/
-drug_data/
+_*
 /masst/analysis/data/
-/masst/analysis/deprecated/
 /masst/analysis/plots/

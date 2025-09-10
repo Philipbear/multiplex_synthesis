@@ -6,7 +6,7 @@ import pandas as pd
 
 
 def gen_data():
-    df = pd.read_pickle('data_cleaning/cleaned_data/ms2_all_df.pkl')
+    df = pd.read_pickle('all_lib/data/ms2_all_df.pkl')
 
     print('unique cmpd inchis:', len(df['inchi'].unique()))
     print('unique cmpd smiles:', len(df['smiles'].unique()))
@@ -103,5 +103,5 @@ def plot_mz(fig_size):
 
 
 if __name__ == '__main__':
-    # gen_data()
+    gen_data()
     plot_mz((2.5, 1.1))

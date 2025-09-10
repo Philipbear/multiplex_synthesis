@@ -4,18 +4,14 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 
 """
-['name', 'exact_mass', 'scan', 'smiles', 'inchi', 'usi', 'mz', 'adduct',
-       'formula', 'inchikey', '2d_inchikey']
+name	mz	smiles	inchi	usi	spec_id	adduct	formula	exact_mass	inchikey	2d_inchikey
 """
 
 
-def plot_isomers(filtered=False, save_path='library_analysis/basic_stats/data'):
+def plot_isomers(save_path='library_analysis/basic_stats/data'):
     
     
-    if filtered:
-        df = pd.read_pickle('data_cleaning/cleaned_data/ms2_filtered_df.pkl')
-    else:
-        df = pd.read_pickle('data_cleaning/cleaned_data/ms2_all_df.pkl')
+    df = pd.read_pickle('all_lib/data/ms2_all_df.pkl')
     
     df['isomer_count'] = df['name'].apply(lambda x: x.split('(known isomers: ')[1].split(';')[0])
     df['isomer_count'] = df['isomer_count'].astype(int)
@@ -34,7 +30,7 @@ def plot_isomers(filtered=False, save_path='library_analysis/basic_stats/data'):
     # Add labels and title
     plt.xlabel('Number of isomers', fontsize=6, labelpad=2)
     plt.ylabel('Count', fontsize=6, labelpad=2)
-    title = 'Distribution of Isomer Counts' + (' (Filtered)' if filtered else '')
+    title = 'Distribution of Isomer Counts'
     # plt.title(title)
     
     # tick parameters
@@ -65,15 +61,9 @@ def plot_isomers(filtered=False, save_path='library_analysis/basic_stats/data'):
     plt.tight_layout()
     
     # Save figure as SVG
-    filename = f"isomer_distribution{'_filtered' if filtered else ''}.svg"
-    save_file = os.path.join(save_path, filename)
+    save_file = os.path.join(save_path, "isomer_distribution.svg")
     plt.savefig(save_file, format='svg', bbox_inches='tight')
     print(f"Figure saved to: {save_file}")
-    
-    # # save as PNG
-    # save_file_png = os.path.join(save_path, filename.replace('.svg', '.png'))
-    # plt.savefig(save_file_png, format='png', bbox_inches='tight', dpi=300)
-    # print(f"Figure saved to: {save_file_png}")
     
     # Show plot
     plt.show()
@@ -81,6 +71,5 @@ def plot_isomers(filtered=False, save_path='library_analysis/basic_stats/data'):
     return df
 
 if __name__ == "__main__":
-    # Plot both versions
-    plot_isomers(filtered=False)
-    # plot_isomers(filtered=True)
+    plot_isomers()
+    

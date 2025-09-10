@@ -1,25 +1,20 @@
-import pandas as pd
 import os
+import pandas as pd
 
 """
-Merge mgf and tsv files (from GNPS2 workflow output) into one mgf file and one tsv file
-
-mgf: NAME, PEPMASS, MSLEVEL, TITLE, SMILES, INCHI, INCHIAUX, ADDUCT, SCANS
+Merge mgf files into one mgf file
 """
 
-def main(folder_path, out_tsv, out_mgf):
+def main(folder_path, out_mgf):
 
     # remove output files if they exist
-    if os.path.isfile(out_tsv):
-        os.remove(out_tsv)
     if os.path.isfile(out_mgf):
         os.remove(out_mgf)
 
     # list all mgf files in the folder
-    mgf_files = [f for f in os.listdir(folder_path) if f.endswith('.mgf')]
+    mgf_files = [f for f in os.listdir(folder_path) if f.endswith('.mgf') and not f.startswith('.')]
     mgf_files = sorted(mgf_files)
 
-    all_df = pd.DataFrame()
     scan_no = 1
     for mgf in mgf_files:
         mgf_path = os.path.join(folder_path, mgf)
@@ -27,32 +22,12 @@ def main(folder_path, out_tsv, out_mgf):
 
         # read mgf to df
         spec_list = read_mgf_to_df(mgf_path)
+        print(f'Found {len(spec_list)} spectra')
+
         # write mgf
         scan_start = scan_no
-        scan_no = write_mgf(spec_list, out_mgf, scans_start=scan_no)
+        scan_no = write_mgf(spec_list, out_mgf, scans_start=scan_start)
         print(f'Wrote {len(spec_list)} spectra')
-
-        # read tsv to df
-        tsv_path = os.path.join(folder_path, mgf.replace('.mgf', '.tsv'))
-        df = pd.read_csv(tsv_path, sep='\t', low_memory=False)
-
-        # renumber EXTRACTSCAN from scan_start
-        df['EXTRACTSCAN'] = df['EXTRACTSCAN'].apply(lambda x: int(x) + scan_start - 1)
-
-        df['FILENAME'] = os.path.basename(out_mgf)
-        df['INCHIAUX'] = None
-        df['COMPOUND_NAME'] = df['COMPOUND_NAME'].apply(lambda x: x.replace('structural isomers', 'isomers').replace('peaks in run', 'peaks'))
-        # round to 5 decimal places
-        df['MOLECULEMASS'] = df['MOLECULEMASS'].apply(lambda x: round(x, 5))
-        df['EXACTMASS'] = df['EXACTMASS'].apply(lambda x: round(x, 5))
-        df['ADDUCT'] = df['ADDUCT'].apply(lambda x: x.split('[')[1].split(']')[0])
-
-        # append df to all_df
-        all_df = pd.concat([all_df, df], ignore_index=True)
-        print(f'Appended {len(df)} spectra')
-    
-    # write all_df to tsv
-    all_df.to_csv(out_tsv, sep='\t', index=False, na_rep='N/A')
 
 
 def write_mgf(spec_list, out_path, scans_start=0):
@@ -68,15 +43,13 @@ def write_mgf(spec_list, out_path, scans_start=0):
             # f.write(f'TITLE={spec["TITLE"]}\n')
             # f.write(f'SMILES={spec["SMILES"]}\n')
             # f.write(f'INCHI={spec["INCHI"]}\n')
-            # f.write(f'INCHIAUX={spec["INCHIAUX"]}\n')
             # f.write(f'ADDUCT={spec["ADDUCT"]}\n')
+            f.write(f'SPECTRUMID={spec["SPECTRUMID"]}\n')
             f.write(f'SCANS={scans_start}\n')
 
             mzs = spec['mz_ls']
             intensities = spec['intensity_ls']
             for mz, intensity in zip(mzs, intensities):
-                mz = round(mz, 5)
-                intensity = round(intensity, 2)
                 f.write(f'{mz} {intensity}\n')
 
             f.write('END IONS\n\n')
@@ -115,28 +88,14 @@ def read_mgf_to_df(library_mgf):
                     key, value = _line.split('=', 1)
                     spectrum[key] = value
                 else:
-
-                    ################### special case ###################
-                    if _line == 'NCCc1cc(O)c(O)cc1':
-                        spectrum['SMILES'] = _line
-                        continue
-
                     # if no '=', it is a spectrum pair
-                    try:
-                        this_mz, this_int = _line.split()
-                        mz_list.append(float(this_mz))
-                        intensity_list.append(float(this_int))
-                    except:
-                        print(_line)
-                        continue
+                    this_mz, this_int = _line.split()
+                    mz_list.append(float(this_mz))
+                    intensity_list.append(float(this_int))
 
     return spectrum_list
 
 
 if __name__ == '__main__':
 
-    main('raw_data/all', 'cleaned_data/ms2_all.tsv', 'cleaned_data/ms2_all.mgf')
-    main('raw_data/filtered', 'cleaned_data/ms2_filtered.tsv', 'cleaned_data/ms2_filtered.mgf')
-
-
-
+    main('all_lib/data', 'all_lib/data/ms2_all.mgf')

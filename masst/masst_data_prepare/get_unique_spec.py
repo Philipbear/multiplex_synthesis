@@ -3,45 +3,47 @@ get unique ms2 from ms2 lib, for MASST
 """
 
 import pandas as pd
+from tqdm import tqdm
 
 
 def get_unique_spec():
-    df = pd.read_pickle('data_cleaning/cleaned_data/ms2_all_df.pkl')
+    df = pd.read_pickle('all_lib/data/ms2_all_df.pkl')
+    
+    # sort by spec_id
+    df = df.sort_values(by='spec_id').reset_index(drop=True)
 
     usi_counts = df['usi'].value_counts().reset_index()
     usi_counts.columns = ['usi', 'frequency']
 
     # group by usi
     df = df.groupby('usi').first().reset_index()
-    df = df[['usi', 'scan']]
+    df = df[['usi', 'spec_id']]
     df = df.merge(usi_counts, on='usi', how='left')
 
-    # sort by scan
-    df = df.sort_values(by='scan').reset_index(drop=True)
-
     # save
-    df.to_csv('masst/data_prepare/ms2_all_unique_usi.tsv', sep='\t', index=False)
+    df.to_csv('masst/masst_data_prepare/ms2_all_unique_usi.tsv', sep='\t', index=False)
+    print("Unique USI spectra saved.")
 
 
 def gen_mgf_with_unique_spec():
 
-    df = pd.read_csv('masst/data_prepare/ms2_all_unique_usi.tsv', sep='\t', low_memory=False)
-    df['scan'] = df['scan'].astype(str)
-    keep_scan_ls = df['scan'].tolist()
+    df = pd.read_csv('masst/masst_data_prepare/ms2_all_unique_usi.tsv', sep='\t', low_memory=False)
+    keep_spec_id_ls = df['spec_id'].tolist()
 
     # read mgf
-    spectrum_list = read_mgf_to_df('data_cleaning/cleaned_data/ms2_all.mgf')
+    spectrum_list = read_mgf_to_df('all_lib/data/ms2_all.mgf')
 
     # filter by scan
     spec_list = []
-    for spec in spectrum_list:
-        if spec['SCANS'] in keep_scan_ls:
+    for spec in tqdm(spectrum_list, desc="Filtering spectra"):
+        if spec['SPECTRUMID'] in keep_spec_id_ls:
             spec_list.append(spec)
-        else:
-            continue
+    
+    assert len(spec_list) == len(keep_spec_id_ls)
+    print(f"Number of unique spectra: {len(spec_list)}")
 
     # write mgf
-    write_mgf(spec_list, 'masst/data_prepare/ms2_all_unique_usi.mgf')
+    write_mgf(spec_list, 'masst/masst_data_prepare/ms2_all_unique_usi.mgf')
 
     return
 
@@ -105,6 +107,7 @@ def write_mgf(spec_list, out_path):
             # f.write(f'INCHI={spec["INCHI"]}\n')
             # f.write(f'INCHIAUX={spec["INCHIAUX"]}\n')
             # f.write(f'ADDUCT={spec["ADDUCT"]}\n')
+            f.write(f'SPECTRUMID={spec["SPECTRUMID"]}\n')
             f.write(f'SCANS={spec["SCANS"]}\n')
 
             mzs = spec['mz_ls']
