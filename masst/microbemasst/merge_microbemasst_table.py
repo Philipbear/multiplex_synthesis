@@ -46,7 +46,7 @@ def process_file(file, result_dir, out_dir, microbemasst_df):
     print(f"Saved {len(df)} entries with microbe info to {out_file_path}")
 
 
-def perform_analysis_main(processed_output_path, out_dir, microbemasst_table_path):
+def microbemasst_main(processed_output_path, out_dir, microbemasst_table_path):
     """
     Analyze MASST match distribution by USI and by structure, saving data files for plotting
     """
@@ -96,6 +96,6 @@ if __name__ == '__main__':
     microbemasst_table_path = "/home/shipei/projects/synlib/masst/data/microbe_masst_table.csv"
     out_dir = "/home/shipei/projects/synlib/masst/processed_output_with_microbe_info"
     
-    # perform_analysis_main(processed_output_path, out_dir, microbemasst_table_path)
+    microbemasst_main(processed_output_path, out_dir, microbemasst_table_path)
     
     merge_microbemasst_tables(out_dir)

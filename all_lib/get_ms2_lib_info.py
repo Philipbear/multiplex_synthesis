@@ -147,7 +147,7 @@ def basic_stats(pkl_path):
     print(f"Number of unique 2D inchikeys: {df['2d_inchikey'].nunique()}")
 
 
-def get_unique_usi(mgf_path='all_lib/data/ms2_all_df.mgf'):
+def get_unique_usi_add_npclass():
     
     df = pd.read_pickle('all_lib/data/ms2_all_df.pkl')
     
@@ -158,6 +158,18 @@ def get_unique_usi(mgf_path='all_lib/data/ms2_all_df.mgf'):
     df = df.drop_duplicates(subset='usi', keep='first').reset_index(drop=True)
     print(f"Number of unique USIs: {len(df)}")
     
+    # add npclassifier info
+    unique_smiles = df['smiles'].dropna().unique()
+    print(f"Number of unique SMILES: {len(unique_smiles)}")
+    smiles_to_npclass = {}
+    for smiles in tqdm(unique_smiles, desc='Processing unique SMILES for NPClassifier'):
+        np_class, np_superclass, np_pathway = smiles_to_npclassifier(smiles)
+        smiles_to_npclass[smiles] = (np_class, np_superclass, np_pathway)
+        
+    df['np_class'] = df['smiles'].map(lambda x: smiles_to_npclass.get(x, (None, None, None))[0])
+    df['np_superclass'] = df['smiles'].map(lambda x: smiles_to_npclass.get(x, (None, None, None))[1])
+    df['np_pathway'] = df['smiles'].map(lambda x: smiles_to_npclass.get(x, (None, None, None))[2])
+    
     # save
     df.to_csv('all_lib/data/ms2_all_df_unique_usi.tsv', sep='\t', index=False)
     df.to_pickle('all_lib/data/ms2_all_df_unique_usi.pkl')
@@ -165,8 +177,8 @@ def get_unique_usi(mgf_path='all_lib/data/ms2_all_df.mgf'):
 
 if __name__ == '__main__':
     
-    get_ms2_lib_info('all_lib/data', 'all_lib/data/ms2_all_df.tsv')
+    # get_ms2_lib_info('all_lib/data', 'all_lib/data/ms2_all_df.tsv')
     
-    basic_stats('all_lib/data/ms2_all_df.pkl')
+    # basic_stats('all_lib/data/ms2_all_df.pkl')
     
-    get_unique_usi()    
+    get_unique_usi_add_npclass()    
