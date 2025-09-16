@@ -79,8 +79,8 @@ def create_combined_pdf(base_umap_dir='masst/umap',
                 # Create 2x5 subplot grid (2 rows, 5 columns)
                 # Top row: 4 UMAP plots with legends (plot + legend pairs)
                 # Bottom row: 1 distribution plot (spans 2 columns) + empty space
-                gs = fig.add_gridspec(2, 5, hspace=0.1, wspace=-0.35, 
-                                      width_ratios=[4, 0.8, 4, 1.5, 2], 
+                gs = fig.add_gridspec(2, 5, hspace=0.1, wspace=-0.1, 
+                                      width_ratios=[3, 1.2, 3, 1.8, 2], 
                                       left=0.05, right=0.95, top=0.90, bottom=0.05)
                 
                 # Plot and legend positions: (row, col_plot, col_legend) for each plot type

@@ -10,7 +10,7 @@ def load_data():
     Load structure overlap data
     """
     print('Loading structure overlap data...')
-    df = pd.read_csv('library_analysis/structure_overlap/structure_overlap.tsv', sep='\t', low_memory=False)
+    df = pd.read_csv('library_analysis/structure_overlap/overlap.tsv', sep='\t', low_memory=False)
     
     df = df[['dbid_SYNTHETIC-COMBINED-LIBRARY_bool', 'dbid_ALL_GNPS_bool', 'dbid_PubChem_bool', 'dbid_PubChem Lite_bool', 'dbid_FoodDB_bool', 'dbid_HMDB_bool', 'dbid_NORMAN_bool']]
     
@@ -179,46 +179,6 @@ def create_upset_plot(upset_data, binary_df, figsize=(6, 1.85), min_subset_size=
     return fig
 
 
-def analyze_intersections(binary_df, top_n=20):
-    """
-    Analyze and print the top intersections
-    
-    Args:
-        binary_df: Binary DataFrame
-        top_n: Number of top intersections to analyze
-    """
-    print(f'\nAnalyzing top {top_n} intersections...')
-    
-    # Count structures per database
-    database_counts = binary_df.sum(axis=0).sort_values(ascending=False)
-    print(f'\nStructures per database:')
-    for db, count in database_counts.items():
-        print(f'  {db}: {count:,} structures')
-    
-    # Find intersections
-    upset_data = from_indicators(binary_df)
-    
-    # Get top intersections
-    top_intersections = upset_data.sort_values(ascending=False).head(top_n)
-    
-    print(f'\nTop {top_n} intersections:')
-    
-    # Get database names from the binary_df columns
-    database_names = list(binary_df.columns)
-    
-    for intersection, count in top_intersections.items():
-        # intersection is a tuple of boolean values corresponding to each database
-        databases = [database_names[i] for i, present in enumerate(intersection) if present]
-        
-        if len(databases) == 1:
-            print(f'  {databases[0]} only: {count:,} structures')
-        else:
-            databases_str = ' ∩ '.join(databases)
-            print(f'  {databases_str}: {count:,} structures')
-    
-    return top_intersections
-
-
 def create_summary_statistics(binary_df):
     """
     Create summary statistics for the dataset
@@ -243,6 +203,14 @@ def create_summary_statistics(binary_df):
     max_databases = structures_per_database.max()
     most_ubiquitous = structures_per_database[structures_per_database == max_databases].index
     print(f'Most ubiquitous structure(s) found in {max_databases} databases: {len(most_ubiquitous)} structure(s)')
+    
+    # print how many structures are found exclusively in syn
+    syn_only = binary_df[(binary_df['Synthetic library']) & (binary_df.sum(axis=1) == 1)]
+    print(f'Structures found exclusively in Synthetic library: {len(syn_only):,}')
+        
+    # print how many structures are found only in syn and Pubchem
+    syn_pubchem_only = binary_df[(binary_df['Synthetic library']) & (binary_df['PubChem']) & (binary_df.sum(axis=1) == 2)]
+    print(f'Structures found only in Synthetic library and PubChem: {len(syn_pubchem_only):,}')
 
 
 def main():
@@ -261,17 +229,14 @@ def main():
     # Create summary statistics
     create_summary_statistics(binary_df)
     
-    # Analyze intersections
-    top_intersections = analyze_intersections(binary_df)
-    
     # Create UpSet plot
     fig = create_upset_plot(upset_data, binary_df)
     
     print('\nAnalysis complete! All plots saved to library_analysis/structure_overlap/plots/')
     
-    return df, binary_df, upset_data, top_intersections
+    return df, binary_df, upset_data
 
 
 if __name__ == '__main__':
     # Run the complete analysis
-    df, binary_df, upset_data, top_intersections = main()
+    df, binary_df, upset_data = main()
