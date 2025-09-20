@@ -125,6 +125,7 @@ def perform_analysis_main(processed_output_path):
 if __name__ == '__main__':
     import os
     os.chdir(os.path.dirname(os.path.abspath(__file__)))
+    os.makedirs("data", exist_ok=True)
     
     #####
     # on server

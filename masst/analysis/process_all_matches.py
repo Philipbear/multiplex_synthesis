@@ -19,15 +19,18 @@ def process_file(file, result_dir):
     if df.empty or df.isna().all().all():
         return None
     
-    df['mri'] = df['mri'].apply(lambda x: x.split('mzspec:')[1])        
-    df['dataset'] = df['mri'].apply(lambda x: x.split(':')[0])
     df = df[~df['dataset'].isin(SYN_DATASETS)].reset_index(drop=True)
+    df['mri'] = df['dataset'].astype(str) + ':' + df['file'].astype(str) + ':scan:' + df['scan'].astype(str)
+    
+    # rename
+    df = df.rename(columns={'scan': 'mri_scan'})
+    
+    # drop cols
+    df = df.drop(columns=['delta_mass', 'cosine', 'matching_peaks', 'file'], errors='ignore')
     
     if df.empty:
         return None
-    
-    # drop cols of Cosine and matching_peaks
-    df = df.drop(columns=['Cosine', 'matching_peaks'], errors='ignore')
+
     df['spec_id'] = this_spec_id
     
     # add repo column
@@ -143,7 +146,7 @@ def process_all_matches_on_server(result_dir, lib_path, redu_path, out_dir, n_co
 
 if __name__ == "__main__":
     
-    masst_raw_dir = '/home/shipei/projects/synlib/output'
+    masst_raw_dir = '/home/shipei/projects/synlib/masst/main/data/masst_results'
     lib_path = '/home/shipei/projects/synlib/masst/ms2_all_df.pkl'
     redu_path = '/home/shipei/projects/synlib/masst/redu.tsv'
     out_dir = '/home/shipei/projects/synlib/masst/processed_output'
