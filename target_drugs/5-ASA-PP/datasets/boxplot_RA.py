@@ -6,6 +6,8 @@ import seaborn as sns
 
 def load_data():
     df = pd.read_csv('target_drugs/5-ASA-PP/datasets/raw/df_melted_rito_RA_COHORT.csv', low_memory=False)
+    
+    df = df[df['Feature'] == '5-aminosalicylic acid_phenylpropionic acid'].reset_index(drop=True)
 
     df = df[['Peak_Area', 'sulfasalazine']]
 
@@ -42,7 +44,7 @@ def create_boxplot(df, output_path):
     df['log_peak_area'] = np.log10(df['Peak_Area'] + 1)
     
     # Create figure and axis
-    fig, ax = plt.subplots(figsize=(1.3, 1.85))
+    fig, ax = plt.subplots(figsize=(1.6, 1.85))
     
     # Define colors for the two groups
     colors = {
@@ -90,7 +92,7 @@ def create_boxplot(df, output_path):
     # Customize the plot
     ax.set_xlabel('Sulfasalazine use', fontsize=6, color='0.2', labelpad=2)
     ax.set_ylabel('5-ASA-phenylpropionate\npeak area (log10)', fontsize=5.5, color='0.2')
-    ax.set_title('RA cohort', fontsize=7, color='0.2', pad=30)
+    ax.set_title('Rheumatoid arthritis cohort', fontsize=7, color='0.2', pad=30)
     
     # Customize tick parameters
     ax.tick_params(axis='y', colors='0.2', labelsize=5.5,

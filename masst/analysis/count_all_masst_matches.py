@@ -17,11 +17,11 @@ def process_file(file, result_dir):
 
     df = pd.read_pickle(file_path)
     
-    df = df[['mri', 'mri_scan']]
+    df = df[['lib_usi', 'inchikey_2d', 'mri', 'mri_scan']]
     df['mri_scan'] = df['mri_scan'].astype(str)
     df['matched_usi'] = df['mri'] + ':' + df['mri_scan']
 
-    return df['matched_usi'].unique()
+    return df['matched_usi'].unique(), df['lib_usi'].unique(), df['inchikey_2d'].unique()
 
 
 def perform_analysis_main(processed_output_path):
@@ -41,10 +41,16 @@ def perform_analysis_main(processed_output_path):
     
     # Combine results from all files
     all_matched_usi = set()
-    for res in results:
-        all_matched_usi.update(res)
+    all_lib_usi = set()
+    all_inchikey_2d = set()
+    for matched_usi, lib_usi, inchikey_2d in results:
+        all_matched_usi.update(matched_usi)
+        all_lib_usi.update(lib_usi)
+        all_inchikey_2d.update(inchikey_2d)
 
     print(f"Total unique matched USIs across all public files: {len(all_matched_usi)}")
+    print(f"Total unique library USIs across all public files: {len(all_lib_usi)}")
+    print(f"Total unique 2D InChIKeys: {len(all_inchikey_2d)}")
 
     return all_matched_usi
 

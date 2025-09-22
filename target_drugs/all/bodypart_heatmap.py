@@ -8,33 +8,19 @@ import seaborn as sns
 def prepare_data(masst_pkl_path):
     
     # MASST data
-    # final cols: 'name', 'lib_usi', 'mri', 'mri_scan', 'NCBITaxonomy', 'UBERONBodyPartName', 'DOIDCommonName', 'HealthStatus'
+    # final cols: 'name', 'lib_usi', 'mri', 'mri_scan', 'SampleType', 'NCBITaxonomy', 'NCBIDivision', 'UBERONBodyPartName', 'HealthStatus'
     masst_df = pd.read_pickle(masst_pkl_path)
-
-    # remove lib_usis with < 3 matches
-    lib_usi_counts = masst_df['lib_usi'].value_counts()
-    valid_usis = lib_usi_counts[lib_usi_counts >= 3].index
-    masst_df = masst_df[masst_df['lib_usi'].isin(valid_usis)].reset_index(drop=True)
 
     # shown in humans
     masst_df = masst_df[(masst_df['NCBITaxonomy'].notna()) & (masst_df['NCBITaxonomy'] != '') & (masst_df['NCBITaxonomy'] != 'missing value')]
     
-    # remove lib_usis with matches to non-human species
-    # first group by lib_usi and get unique NCBITaxonomy
-    print('unique lib_usi count:', masst_df['lib_usi'].nunique())
-    # len is 1 and it should be ['9606|Homo sapiens']
-    masst_df = masst_df.groupby('lib_usi').filter(lambda x: len(x['NCBITaxonomy'].unique()) == 1 and x['NCBITaxonomy'].unique()[0] == '9606|Homo sapiens')
-    print('unique lib_usi count after filtering:', masst_df['lib_usi'].nunique())
-    
     masst_df = masst_df[masst_df['NCBITaxonomy'] == '9606|Homo sapiens']  # only human matches
     
-    # fill empty DOIDCommonName with 'missing value'
-    masst_df['DOIDCommonName'] = masst_df['DOIDCommonName'].fillna('missing value')
-    # remove missing values in DOIDCommonName
-    masst_df = masst_df[masst_df['DOIDCommonName'] != 'missing value'].reset_index(drop=True)
+    # fill empty UBERONBodyPartName with 'missing value'
+    masst_df['UBERONBodyPartName'] = masst_df['UBERONBodyPartName'].fillna('missing value')
         
     # group by lib_usi and aggregate
-    masst_df_grouped = masst_df.groupby(['name', 'DOIDCommonName']).agg({
+    masst_df_grouped = masst_df.groupby(['name', 'UBERONBodyPartName']).agg({
         'mri': 'count'
     }).reset_index()
     masst_df_grouped.rename(columns={'mri': 'match_count'}, inplace=True)
@@ -42,29 +28,33 @@ def prepare_data(masst_pkl_path):
     return masst_df_grouped
 
 
-def plot_disease_heatmap(input_data, output_path):
+def plot_bodypart_heatmap(input_data, output_path):
     """
-    Plot heatmap from compound-disease data.
+    Plot heatmap from compound-bodypart data.
 
     Args:
-        input_data (pd.DataFrame): DataFrame with columns 'name', 'DOIDCommonName', 'match_count'
+        input_data (pd.DataFrame): DataFrame with columns 'name', 'UBERONBodyPartName', 'match_count'
         output_path (str): Path to save the output SVG file
     """
     
     df = input_data.copy()
-
-    # only conjugates
-    df = df[df['name'].str.contains('_', case=False)].reset_index(drop=True)
-    df['name'] = df['name'].apply(lambda x: x.split(' (known')[0])  # clean names
-    df['name'] = df['name'].apply(lambda x: x.replace('5-Aminosalicylic acid', '5-ASA'))  # specific name replacement
     
     # Create pivot table with compound names as rows (y-axis) and body parts as columns (x-axis)
     pivot_data = df.pivot_table(
-        index='DOIDCommonName', 
-        columns='name', 
+        index='name', 
+        columns='UBERONBodyPartName', 
         values='match_count', 
-        aggfunc='max'  # max match counts
+        aggfunc='sum'  # Sum match counts
     ).fillna(0)
+    
+    # Define the desired row order
+    desired_row_order = ['Ibuprofen', 'Carnitine', 'Ibuprofen-carnitine', '5-ASA', 'Phenylpropionate', '5-ASA-phenylpropionate']
+    
+    # Filter to only include compounds that exist in the data and are in the desired order
+    available_compounds = [compound for compound in desired_row_order if compound in pivot_data.index]
+    
+    # Reorder rows according to the specified order
+    pivot_data = pivot_data.reindex(available_compounds)
     
     # Convert data to numeric, coercing errors to NaN
     for col in pivot_data.columns:
@@ -91,14 +81,14 @@ def plot_disease_heatmap(input_data, output_path):
                                linewidths=0.5,
                                annot=False,
                                robust=True,
-                               figsize=(3.7, 1),
+                               figsize=(5, 2.7),
                                # Clustering parameters
-                               row_cluster=True,
+                               row_cluster=False,
                                col_cluster=True,
-                               metric='euclidean',
-                               cbar_pos=(-0.05, 0.0, 0.1, 0.05),  # x, y, width, height
+                               metric='euclidean',   
+                               cbar_pos=(-0.02, 0.4, 0.1, 0.03),  # x, y, width, height
                                cbar_kws={'orientation': 'horizontal'},
-                               dendrogram_ratio=(0.02, 0.07),
+                               dendrogram_ratio=(0.15, 0.15),
                                # Show labels
                                xticklabels=True,
                                yticklabels=True)
@@ -112,7 +102,7 @@ def plot_disease_heatmap(input_data, output_path):
     dendrogram_pos = clustermap.ax_row_dendrogram.get_position()
     
     # Calculate new positions
-    gap = 0.00
+    gap = 0.005
     new_heatmap_width = heatmap_pos.width - gap
     new_dendrogram_left = heatmap_pos.x0 + new_heatmap_width + gap
     
@@ -125,11 +115,6 @@ def plot_disease_heatmap(input_data, output_path):
     # Flip the dendrogram to face left
     clustermap.ax_row_dendrogram.invert_xaxis()
     
-    # Adjust the position of the column dendrogram
-    col_dendrogram_pos = clustermap.ax_col_dendrogram.get_position()
-    clustermap.ax_col_dendrogram.set_position([heatmap_pos.x0, col_dendrogram_pos.y0 - 0.06,
-                                                col_dendrogram_pos.width, col_dendrogram_pos.height])
-
     # Adjust tick parameters for both axes
     clustermap.ax_heatmap.tick_params(
         axis='x',
@@ -156,8 +141,8 @@ def plot_disease_heatmap(input_data, output_path):
     )
     
     # Set axis titles
-    clustermap.ax_heatmap.set_xlabel('', fontsize=6, labelpad=2)
-    clustermap.ax_heatmap.set_ylabel('', fontsize=6, labelpad=9, rotation=270)
+    clustermap.ax_heatmap.set_xlabel('Human body part', fontsize=6, labelpad=5)
+    clustermap.ax_heatmap.set_ylabel('', fontsize=0, labelpad=9, rotation=270)
 
     # Add colorbar label
     clustermap.ax_cbar.set_xlabel('Log(Count + 1)', fontsize=6, labelpad=2, color='0.2')
@@ -174,14 +159,14 @@ def plot_disease_heatmap(input_data, output_path):
 if __name__ == '__main__':
     
     # Prepare the data
-    masst_pkl_path = 'target_drugs/5ASA_conjugates/data/5-Aminosalicylic acid_masst_matches.pkl'
-    compound_disease_data = prepare_data(masst_pkl_path)
+    masst_pkl_path = 'target_drugs/all/data/all_masst_matches_with_metadata_0.7_3.pkl'
+    compound_bodypart_data = prepare_data(masst_pkl_path)
     
     # Save the processed data
-    compound_disease_data.to_csv('target_drugs/5ASA_conjugates/data/compound_disease_data.tsv', sep='\t', index=False)
-
+    compound_bodypart_data.to_csv('target_drugs/all/data/compound_bodypart_data.tsv', sep='\t', index=False)
+    
     # Generate and save the heatmap
-    plot_disease_heatmap(
-        compound_disease_data,
-        'target_drugs/5ASA_conjugates/plots/disease_heatmap.svg'
+    plot_bodypart_heatmap(
+        compound_bodypart_data, 
+        'target_drugs/all/plots/bodypart_heatmap.svg'
     )

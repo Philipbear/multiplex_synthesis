@@ -5,13 +5,17 @@ import seaborn as sns
 
 
 def load_data():
-    df = pd.read_csv('target_drugs/5-ASA-PP/datasets/MSV000082094_df.tsv', sep='\t', low_memory=False)
+    df = pd.read_csv('target_drugs/5-ASA-PP/datasets/raw/MSV000082094_40_patients_merged_df_UC.csv', low_memory=False)
+    
+    # remove blank and extracts
+    df = df[~df['id'].isin(['Blank', 'Extract'])].reset_index(drop=True)
 
-    df = df[['intensity', '5ASA_prior_use', '5ASA_current_use']]
+    df = df[['5-aminosalicylic acid_phenylpropionic acid', 'ASA_exposure', 'current_5ASA']]
+    df.columns = ['intensity', 'ASA_exposure', 'current_5ASA']
 
     # Convert to boolean: '1' means exposed/using, other values mean not exposed/not using
-    df['5ASA_prior_use'] = df['5ASA_prior_use'].apply(lambda x: True if x == 1 else False)
-    df['5ASA_current_use'] = df['5ASA_current_use'].apply(lambda x: True if x == 1 else False)
+    df['5ASA_prior_use'] = df['ASA_exposure'].apply(lambda x: True if x == 1 else False)
+    df['5ASA_current_use'] = df['current_5ASA'].apply(lambda x: True if x == 1 else False)
 
     # Create current use categories for grouping
     df['current_use_group'] = df['5ASA_current_use'].apply(lambda x: 'Yes' if x else 'No')
@@ -56,7 +60,7 @@ def create_boxplot(df, output_path):
     df['log_intensity'] = np.log10(df['intensity'] + 1)
     
     # Create figure and axis
-    fig, ax = plt.subplots(figsize=(1.3, 1.85))
+    fig, ax = plt.subplots(figsize=(1.6, 1.85))
     
     # Define colors for 5-ASA exposure categories
     colors = {
@@ -136,7 +140,7 @@ def create_boxplot(df, output_path):
     ax.legend(loc='lower left', frameon=False, fontsize=6, ncol=1, 
               labelspacing=0.3,
               handletextpad=0.2,
-              bbox_to_anchor=(-0.25, 1))
+              bbox_to_anchor=(0.2, 1))
     
     # Tight layout
     plt.tight_layout()
@@ -148,7 +152,7 @@ def create_boxplot(df, output_path):
     print(f"Data summary by current use and exposure category:")
     print(df.groupby(['current_use_group', '5ASA_exposure_category']).size().unstack(fill_value=0))
     
-    plt.show()
+    # plt.show()
 
 
 if __name__ == "__main__":
