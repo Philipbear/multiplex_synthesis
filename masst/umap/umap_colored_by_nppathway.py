@@ -427,16 +427,16 @@ if __name__ == "__main__":
         print(f"Processing rank: {rank}")
         print('='*60)
         
-        # Run for all USIs
-        main(
-            reprocess_data=False,
-            classifier='np_pathway',
-            rank=rank,
-            conjugates_only=False,
-            base_umap_dir='masst/umap',
-            n_neighbors=25,
-            min_dist=0.7
-        )
+        # # Run for all USIs
+        # main(
+        #     reprocess_data=False,
+        #     classifier='np_pathway',
+        #     rank=rank,
+        #     conjugates_only=False,
+        #     base_umap_dir='masst/umap',
+        #     n_neighbors=25,
+        #     min_dist=0.7
+        # )
         
         # Run for conjugates only
         main(

@@ -4,6 +4,114 @@ import numpy as np
 import os
 
 
+def sort_microbe_data_taxonomically(df):
+    """
+    Sort microbe data by taxonomic order, grouping related phyla and classes
+    """
+    # Define taxonomic order for phyla (broader groupings)
+    phylum_order = [
+        # Bacteria
+        'Actinomycetota',
+        'Bacillota', 
+        'Bacteroidota',
+        'Pseudomonadota',
+        'Spirochaetota',
+        'Verrucomicrobiota',
+        'Cyanobacteriota',
+        'Fusobacteriota',
+        'Campylobacterota',
+        'Myxococcota',
+        'Bacillariophyta',
+        
+        # Archaea
+        'Euryarchaeota',
+        
+        # Fungi
+        'Ascomycota',
+        'Basidiomycota',
+        'Mucoromycota',
+        'Zoopagomycota',
+        
+        # Eukaryotes
+        'Chlorophyta',
+        'Chordata'
+    ]
+    
+    # Define class order within each phylum
+    class_order_within_phylum = {
+        'Actinomycetota': ['Actinomycetes', 'Coriobacteriia'],
+        
+        'Bacillota': ['Bacilli', 'Clostridia', 'Erysipelotrichia', 'Tissierellia', 'Negativicutes'],
+        
+        'Bacteroidota': ['Bacteroidia', 'Flavobacteriia', 'Cytophagia', 'Chitinophagia', 'Sphingobacteriia'],
+        
+        'Pseudomonadota': ['Gammaproteobacteria', 'Alphaproteobacteria', 'Betaproteobacteria', 'Epsilonproteobacteria'],
+        
+        'Spirochaetota': ['Spirochaetia'],
+        
+        'Verrucomicrobiota': ['Verrucomicrobiia'],
+        
+        'Cyanobacteriota': ['Cyanophyceae'],
+        
+        'Fusobacteriota': ['Fusobacteriia'],
+        
+        'Campylobacterota': ['Epsilonproteobacteria'],
+        
+        'Myxococcota': ['Myxococcia'],
+        
+        'Bacillariophyta': ['Coscinodiscophyceae'],
+        
+        'Euryarchaeota': ['Halobacteria', 'Methanobacteria'],
+        
+        'Ascomycota': ['Dothideomycetes', 'Sordariomycetes', 'Eurotiomycetes', 'Leotiomycetes', 
+                       'Saccharomycetes', 'Pezizomycetes', 'Schizosaccharomycetes'],
+        
+        'Basidiomycota': ['Agaricomycetes', 'Ustilaginomycetes', 'Tremellomycetes', 'Microbotryomycetes',
+                          'Dacrymycetes', 'Exobasidiomycetes', 'Malasseziomycetes'],
+        
+        'Mucoromycota': ['Mortierellomycetes'],
+        
+        'Zoopagomycota': ['Basidiobolomycetes'],
+        
+        'Chlorophyta': ['Trebouxiophyceae'],
+        
+        'Chordata': ['Mammalia']
+    }
+    
+    # Create sorting keys
+    def get_phylum_sort_key(phylum):
+        if phylum in phylum_order:
+            return phylum_order.index(phylum)
+        else:
+            return len(phylum_order)  # Put unknown phyla at the end
+    
+    def get_class_sort_key(row):
+        phylum = row['phylum']
+        class_name = row['class']
+        
+        if phylum in class_order_within_phylum:
+            class_list = class_order_within_phylum[phylum]
+            if class_name in class_list:
+                return class_list.index(class_name)
+            else:
+                return len(class_list)  # Put unknown classes at the end of their phylum
+        else:
+            return 0
+    
+    # Add sorting columns
+    df_sorted = df.copy()
+    df_sorted['phylum_sort_key'] = df_sorted['phylum'].apply(get_phylum_sort_key)
+    df_sorted['class_sort_key'] = df_sorted.apply(get_class_sort_key, axis=1)
+    
+    # Sort by phylum first, then by class within phylum
+    df_sorted = df_sorted.sort_values(['phylum_sort_key', 'class_sort_key'])
+    
+    # Remove the sorting columns
+    df_sorted = df_sorted.drop(['phylum_sort_key', 'class_sort_key'], axis=1)
+    
+    return df_sorted.reset_index(drop=True)
+
+
 def create_class_barplots(input_file='masst/microbemasst/data/microbemasst_class_summary.tsv', 
                          output_path='masst/microbemasst/plots/microbemasst_class_barplot.svg',
                          figsize=(7.8, 3.5)):
@@ -18,8 +126,9 @@ def create_class_barplots(input_file='masst/microbemasst/data/microbemasst_class
     # Load the data
     df = pd.read_csv(input_file, sep='\t')
     
-    # Sort by phylum first, then by class
-    df = df.sort_values(['phylum', 'class'], ascending=[True, True])
+    # # Sort by phylum first, then by class
+    # df = df.sort_values(['phylum', 'class'], ascending=[True, True])
+    df = sort_microbe_data_taxonomically(df)
     
     # Set class as index
     df_plot = df.set_index('class')
@@ -78,8 +187,8 @@ def create_class_barplots(input_file='masst/microbemasst/data/microbemasst_class
         # Vertical lines from each class to the horizontal line
         if len(indices) > 2:
             # For groups with more than 2 classes, only draw lines for the first and last class
-            ax.plot([start_idx, start_idx], [y_base, y_base + 0.1], color='black', lw=0.8, clip_on=False, transform=transform)
-            ax.plot([end_idx, end_idx], [y_base, y_base + 0.1], color='black', lw=0.8, clip_on=False, transform=transform)
+            ax.plot([start_idx, start_idx], [y_base, y_base + 0.05], color='black', lw=0.8, clip_on=False, transform=transform)
+            ax.plot([end_idx, end_idx], [y_base, y_base + 0.05], color='black', lw=0.8, clip_on=False, transform=transform)
         else:
             # For groups with 1 or 2 classes, draw lines for all classes
             for i in indices:
@@ -100,7 +209,7 @@ def create_class_barplots(input_file='masst/microbemasst/data/microbemasst_class
     
     # Customize legend (matching microbemasst_barplot)
     handles, labels = ax.get_legend_handles_labels()
-    ax.legend(handles[::-1], labels[::-1], bbox_to_anchor=(0.6, 1.15), loc='upper left', fontsize=6.5,
+    ax.legend(handles[::-1], labels[::-1], bbox_to_anchor=(0.65, 1.1), loc='upper left', fontsize=6.5,
               ncol=1, labelspacing=0.3,
               handlelength=1.5, handletextpad=0.5)
     

@@ -4,6 +4,7 @@ import multiprocessing as mp
 from functools import partial
 from tqdm import tqdm
 
+# spec_id	lib_usi	name	inchikey_2d	mri	mri_scan	repo	NCBITaxonomy	UBERONBodyPartName	DOIDCommonName	HealthStatus
 
 SYN_DATASETS = ['MSV000097885', 'MSV000097874', 'MSV000097869', 'MSV000094559', 'MSV000094447', 'MSV000094393', 'MSV000094391', 
                 'MSV000094382', 'MSV000094337', 'MSV000094300', 'MSV000098637', 'MSV000098628', 'MSV000098639', 'MSV000098640']
@@ -20,7 +21,8 @@ def process_file(file, result_dir):
         return None
     
     df = df[~df['dataset'].isin(SYN_DATASETS)].reset_index(drop=True)
-    df['mri'] = df['dataset'].astype(str) + ':' + df['file'].astype(str) + ':scan:' + df['scan'].astype(str)
+    
+    df['mri'] = df['dataset'].astype(str) + ':' + df['file'].astype(str)
     
     # rename
     df = df.rename(columns={'scan': 'mri_scan'})
@@ -61,6 +63,9 @@ def prepare_lib(lib_path='data_cleaning/cleaned_data/ms2_all_df.pkl'):
     # dereplicate by usi, keep the first one (smallest spec_id)
     lib = lib.drop_duplicates(subset='lib_usi', keep='first').reset_index(drop=True)
     print(f"Number of unique USIs: {len(lib)}")
+    
+    
+    lib['name'] = lib['name'].apply(lambda x: x.split(' (known')[0])
 
     return lib   # lib: spec_id, lib_usi, name, inchikey_2d
 

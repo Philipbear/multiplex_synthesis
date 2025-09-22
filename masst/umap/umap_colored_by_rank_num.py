@@ -391,9 +391,9 @@ if __name__ == "__main__":
             base_umap_dir='masst/umap'
         )
         
-        # Run for all USIs
-        main(
-            rank=rank,
-            conjugates_only=False,
-            base_umap_dir='masst/umap'
-        )
+        # # Run for all USIs
+        # main(
+        #     rank=rank,
+        #     conjugates_only=False,
+        #     base_umap_dir='masst/umap'
+        # )
