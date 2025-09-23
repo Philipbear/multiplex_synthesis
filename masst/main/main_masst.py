@@ -47,55 +47,98 @@ def read_mgf_to_list(library_mgf):
     return spectrum_list
 
 
+def filter_processable_spectra(spectrum_list, out_dir, mgf_identifier_field_name='SPECTRUMID', min_peaks=4):
+    """
+    Filter spectra to only include those that need processing and have sufficient data
+    
+    Returns:
+        tuple: (processable_spectra, skip_stats)
+    """
+    processable_spectra = []
+    skip_stats = {
+        'already_processed': 0,
+        'insufficient_data': 0,
+        'no_precursor_mz': 0,
+        'total_skipped': 0
+    }
+    
+    for spec_dict in spectrum_list:
+        spec_id = spec_dict.get(mgf_identifier_field_name, 'unknown_id')
+        out_path = os.path.join(out_dir, f"{spec_id}.tsv")
+        
+        # Check if already processed
+        if os.path.exists(out_path):
+            skip_stats['already_processed'] += 1
+            continue
+        
+        # Check precursor mz
+        try:
+            precursor_mz = float(spec_dict.get('PEPMASS', 0))
+        except (ValueError, TypeError):
+            precursor_mz = 0
+        
+        if precursor_mz == 0:
+            skip_stats['no_precursor_mz'] += 1
+            continue
+        
+        # Check number of peaks
+        if len(spec_dict.get('mz_ls', [])) < min_peaks:
+            skip_stats['insufficient_data'] += 1
+            continue
+        
+        # If we get here, spectrum is processable
+        processable_spectra.append(spec_dict)
+    
+    skip_stats['total_skipped'] = skip_stats['already_processed'] + skip_stats['insufficient_data'] + skip_stats['no_precursor_mz']
+    
+    return processable_spectra, skip_stats
+
+
 def masst_one_spec(spec_dict, out_dir,
                    mgf_identifier_field_name='SPECTRUMID', 
                    min_cos=0.7, min_peaks=4, ms1_tol=0.05, ms2_tol=0.05, analog=False, analog_mass_below=130, analog_mass_above=200):
     """
     Perform MASST search for one spectrum dictionary
-    :return: MASST results as dataframe
+    Note: This function now assumes the spectrum has already been validated for processing
     """
     spec_id = spec_dict.get(mgf_identifier_field_name, 'unknown_id')
     out_path = os.path.join(out_dir, f"{spec_id}.tsv")
-    
-    # Check if file already exists
-    if os.path.exists(out_path):
-        return {'status': 'skipped', 'reason': 'already_processed', 'spec_id': spec_id}
     
     mzs = spec_dict['mz_ls']
     intensities = spec_dict['intensity_ls']
     precursor_mz = float(spec_dict.get('PEPMASS', 0))
 
-    # skip if no precursor mz or too few peaks
-    if precursor_mz == 0 or len(mzs) < min_peaks:
-        return {'status': 'skipped', 'reason': 'low_quality_data', 'spec_id': spec_id}
+    try:
+        result = fast_masst_spectrum(
+            mzs,
+            intensities,
+            precursor_mz,
+            precursor_charge=1,
+            precursor_mz_tol=ms1_tol,
+            mz_tol=ms2_tol,
+            min_cos=min_cos,
+            analog=analog,
+            analog_mass_below=analog_mass_below,
+            analog_mass_above=analog_mass_above,
+            database=DataBase.metabolomicspanrepo_index_nightly,
+            min_signals=min_peaks
+        )
+        
+        if result is None:  # API call failed
+            return {'status': 'failed', 'reason': 'api_error', 'spec_id': spec_id}
 
-    result = fast_masst_spectrum(
-        mzs,
-        intensities,
-        precursor_mz,
-        precursor_charge=1,
-        precursor_mz_tol=ms1_tol,
-        mz_tol=ms2_tol,
-        min_cos=min_cos,
-        analog=analog,
-        analog_mass_below=analog_mass_below,
-        analog_mass_above=analog_mass_above,
-        database=DataBase.metabolomicspanrepo_index_nightly,
-        min_signals=min_peaks
-    )
+        result = result[result['matching_peaks'] >= min_peaks].reset_index(drop=True)
+        
+        # Save results even if empty (to mark as processed)
+        result.to_csv(out_path, sep='\t', index=False)
+        
+        if len(result) == 0:
+            return {'status': 'success', 'reason': 'no_matches', 'spec_id': spec_id}
+        else:
+            return {'status': 'success', 'reason': 'matches_found', 'spec_id': spec_id, 'num_matches': len(result)}
     
-    if result is None:  # API call failed
-        return {'status': 'failed', 'reason': 'api_error', 'spec_id': spec_id}
-
-    result = result[result['matching_peaks'] >= min_peaks].reset_index(drop=True)
-    
-    # Save results even if empty (to mark as processed)
-    result.to_csv(out_path, sep='\t', index=False)
-    
-    if len(result) == 0:
-        return {'status': 'success', 'reason': 'no_matches', 'spec_id': spec_id}
-    else:
-        return {'status': 'success', 'reason': 'matches_found', 'spec_id': spec_id, 'num_matches': len(result)}
+    except Exception as e:
+        return {'status': 'failed', 'reason': f'exception: {str(e)}', 'spec_id': spec_id}
     
 
 def process_spectrum_batch(spectrum_batch, out_dir,
@@ -117,14 +160,17 @@ def process_spectrum_batch(spectrum_batch, out_dir,
     return results
 
 
-def get_processing_stats(batch_results):
+def get_processing_stats(batch_results, skip_stats):
     """
-    Calculate processing statistics from batch results
+    Calculate processing statistics from batch results and skip stats
     """
     stats = {
-        'total_processed': 0,
-        'already_processed': 0,
-        'skipped_insufficient_data': 0,
+        'total_input': 0,
+        'already_processed': skip_stats['already_processed'],
+        'skipped_no_precursor': skip_stats['no_precursor_mz'],
+        'skipped_insufficient_data': skip_stats['insufficient_data'],
+        'total_skipped': skip_stats['total_skipped'],
+        'attempted_processing': 0,
         'api_errors': 0,
         'successful_no_matches': 0,
         'successful_with_matches': 0,
@@ -134,14 +180,9 @@ def get_processing_stats(batch_results):
     for batch_result in batch_results:
         if batch_result:
             for result in batch_result:
-                stats['total_processed'] += 1
+                stats['attempted_processing'] += 1
                 
-                if result['status'] == 'skipped':
-                    if result['reason'] == 'already_processed':
-                        stats['already_processed'] += 1
-                    elif result['reason'] == 'insufficient_data':
-                        stats['skipped_insufficient_data'] += 1
-                elif result['status'] == 'failed':
+                if result['status'] == 'failed':
                     if result['reason'] == 'api_error':
                         stats['api_errors'] += 1
                     else:
@@ -151,6 +192,8 @@ def get_processing_stats(batch_results):
                         stats['successful_no_matches'] += 1
                     elif result['reason'] == 'matches_found':
                         stats['successful_with_matches'] += 1
+    
+    stats['total_input'] = stats['total_skipped'] + stats['attempted_processing']
     
     return stats
 
@@ -182,20 +225,31 @@ def main_masst_mgf(library_mgf, out_dir, n_cores=None, batch_size=10,
     # Create output directory
     os.makedirs(out_dir, exist_ok=True)
     
-    # Check how many files already exist
-    existing_files = set()
-    if os.path.exists(out_dir):
-        existing_files = {f.replace('.tsv', '') for f in os.listdir(out_dir) if f.endswith('.tsv')}
+    # Filter spectra to remove those that don't need processing
+    print("Filtering spectra for processing...")
+    processable_spectra, skip_stats = filter_processable_spectra(
+        spectrum_list, out_dir, mgf_identifier_field_name, min_peaks
+    )
     
-    print(f"Found {len(existing_files)} already processed spectra")
+    print(f"Spectra breakdown:")
+    print(f"  Total input: {len(spectrum_list):,}")
+    print(f"  Already processed: {skip_stats['already_processed']:,}")
+    print(f"  No precursor m/z: {skip_stats['no_precursor_mz']:,}")
+    print(f"  Insufficient peaks (< {min_peaks}): {skip_stats['insufficient_data']:,}")
+    print(f"  Total skipped: {skip_stats['total_skipped']:,}")
+    print(f"  Ready for processing: {len(processable_spectra):,}")
     
-    # Split spectra into batches
-    spectrum_batches = [spectrum_list[i:i + batch_size] 
-                       for i in range(0, len(spectrum_list), batch_size)]
+    if not processable_spectra:
+        print("No spectra need processing. Exiting.")
+        return
+    
+    # Split processable spectra into batches
+    spectrum_batches = [processable_spectra[i:i + batch_size] 
+                       for i in range(0, len(processable_spectra), batch_size)]
     
     print(f"Processing {len(spectrum_batches)} batches with {n_cores} cores...")
     
-    # Create partial function with fixed out_dir
+    # Create partial function with fixed parameters
     process_func = partial(process_spectrum_batch, out_dir=out_dir,
                            mgf_identifier_field_name=mgf_identifier_field_name, min_cos=min_cos, min_peaks=min_peaks,
                            ms1_tol=ms1_tol, ms2_tol=ms2_tol,
@@ -210,12 +264,15 @@ def main_masst_mgf(library_mgf, out_dir, n_cores=None, batch_size=10,
         ))
     
     # Calculate and print statistics
-    stats = get_processing_stats(batch_results)
+    stats = get_processing_stats(batch_results, skip_stats)
     
-    print(f"\n=== Processing Statistics ===")
-    print(f"Total spectra processed: {stats['total_processed']:,}")
+    print(f"\n=== Final Processing Statistics ===")
+    print(f"Total input spectra: {stats['total_input']:,}")
     print(f"Already processed (skipped): {stats['already_processed']:,}")
-    print(f"Skipped (insufficient data): {stats['skipped_insufficient_data']:,}")
+    print(f"No precursor m/z (skipped): {stats['skipped_no_precursor']:,}")
+    print(f"Insufficient peaks (skipped): {stats['skipped_insufficient_data']:,}")
+    print(f"Total skipped: {stats['total_skipped']:,}")
+    print(f"Attempted processing: {stats['attempted_processing']:,}")
     print(f"API errors: {stats['api_errors']:,}")
     print(f"Successful (no matches): {stats['successful_no_matches']:,}")
     print(f"Successful (with matches): {stats['successful_with_matches']:,}")
