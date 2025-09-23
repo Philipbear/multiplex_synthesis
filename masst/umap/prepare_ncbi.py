@@ -11,12 +11,12 @@ def gen_shown_rank(rank='phylum'):
 
     df['shown_rank'] = df[rank]
 
-    # Specifically for humans
-    df.loc[df['NCBI'] == 9606, 'shown_rank'] = 'Humans'
+    # # Specifically for humans
+    # df.loc[df['NCBI'] == 9606, 'shown_rank'] = 'Humans'
 
-    # For rodents
-    rodent_species = [10088, 10090, 10105, 10114, 10116]
-    df.loc[df['NCBI'].isin(rodent_species), 'shown_rank'] = 'Rodents'
+    # # For rodents
+    # rodent_species = [10088, 10090, 10105, 10114, 10116]
+    # df.loc[df['NCBI'].isin(rodent_species), 'shown_rank'] = 'Rodents'
 
     # save dict from NCBI to shown_rank
     ncbi_to_shown_rank = df.set_index('NCBI')['shown_rank'].to_dict()

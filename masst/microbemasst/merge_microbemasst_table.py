@@ -90,12 +90,32 @@ def merge_microbemasst_tables(out_dir):
     print(f"Merged microbe MASST table saved to {merged_out_path}, total {len(merged_df)} entries.")
 
 
+
+def print_stats():
+    df = pd.read_csv('masst/microbemasst/data/merged_microbemasst_table.tsv', sep='\t')
+    print(f"Total entries: {len(df)}")
+    
+    # unique USIs
+    unique_usis = df['lib_usi'].nunique()
+    print(f"Unique USIs: {unique_usis}")
+    # unique InChIKeys
+    unique_inchikeys = df['inchikey_2d'].nunique()
+    print(f"Unique InChIKeys: {unique_inchikeys}")
+    # unique matched NCBI Taxonomy IDs
+    unique_ncbi_taxa = df['Taxa_NCBI'].nunique()
+    print(f"Unique matched NCBI Taxonomy IDs: {unique_ncbi_taxa}")
+
+
 if __name__ == '__main__':    
-    # on server
-    processed_output_path = "/home/shipei/projects/synlib/masst/processed_output"
-    microbemasst_table_path = "/home/shipei/projects/synlib/masst/data/microbe_masst_table.csv"
-    out_dir = "/home/shipei/projects/synlib/masst/processed_output_with_microbe_info"
+    # # on server
+    # processed_output_path = "/home/shipei/projects/synlib/masst/processed_output"
+    # microbemasst_table_path = "/home/shipei/projects/synlib/masst/data/microbe_masst_table.csv"
+    # out_dir = "/home/shipei/projects/synlib/masst/processed_output_with_microbe_info"
     
-    microbemasst_main(processed_output_path, out_dir, microbemasst_table_path)
+    # microbemasst_main(processed_output_path, out_dir, microbemasst_table_path)
     
-    merge_microbemasst_tables(out_dir)
+    # merge_microbemasst_tables(out_dir)
+    
+    #############
+    # on local
+    print_stats()
