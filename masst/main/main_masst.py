@@ -47,12 +47,14 @@ def read_mgf_to_list(library_mgf):
     return spectrum_list
 
 
-def masst_one_spec(spec_dict, out_dir):
+def masst_one_spec(spec_dict, out_dir,
+                   mgf_identifier_field_name='SPECTRUMID', 
+                   min_cos=0.7, min_peaks=4, ms1_tol=0.05, ms2_tol=0.05, analog=False, analog_mass_below=130, analog_mass_above=200):
     """
     Perform MASST search for one spectrum dictionary
     :return: MASST results as dataframe
     """
-    spec_id = spec_dict.get('SPECTRUMID', 'unknown_id')
+    spec_id = spec_dict.get(mgf_identifier_field_name, 'unknown_id')
     out_path = os.path.join(out_dir, f"{spec_id}.tsv")
     
     # Check if file already exists
@@ -64,7 +66,7 @@ def masst_one_spec(spec_dict, out_dir):
     precursor_mz = float(spec_dict.get('PEPMASS', 0))
 
     # skip if no precursor mz or too few peaks
-    if precursor_mz == 0 or len(mzs) < 4:
+    if precursor_mz == 0 or len(mzs) < min_peaks:
         return {'status': 'skipped', 'reason': 'low_quality_data', 'spec_id': spec_id}
 
     result = fast_masst_spectrum(
@@ -72,20 +74,20 @@ def masst_one_spec(spec_dict, out_dir):
         intensities,
         precursor_mz,
         precursor_charge=1,
-        precursor_mz_tol=0.05,
-        mz_tol=0.05,
-        min_cos=0.7,
-        analog=False,
-        analog_mass_below=130,
-        analog_mass_above=200,
+        precursor_mz_tol=ms1_tol,
+        mz_tol=ms2_tol,
+        min_cos=min_cos,
+        analog=analog,
+        analog_mass_below=analog_mass_below,
+        analog_mass_above=analog_mass_above,
         database=DataBase.metabolomicspanrepo_index_nightly,
-        min_signals=4
+        min_signals=min_peaks
     )
     
     if result is None:  # API call failed
         return {'status': 'failed', 'reason': 'api_error', 'spec_id': spec_id}
 
-    result = result[result['matching_peaks'] >= 4].reset_index(drop=True)
+    result = result[result['matching_peaks'] >= min_peaks].reset_index(drop=True)
     
     # Save results even if empty (to mark as processed)
     result.to_csv(out_path, sep='\t', index=False)
@@ -96,13 +98,20 @@ def masst_one_spec(spec_dict, out_dir):
         return {'status': 'success', 'reason': 'matches_found', 'spec_id': spec_id, 'num_matches': len(result)}
     
 
-def process_spectrum_batch(spectrum_batch, out_dir):
+def process_spectrum_batch(spectrum_batch, out_dir,
+                           mgf_identifier_field_name='SPECTRUMID', min_cos=0.7, min_peaks=4, 
+                           ms1_tol=0.05, ms2_tol=0.05, 
+                           analog=False, analog_mass_below=130, analog_mass_above=200):
     """
     Process a batch of spectra
     """
     results = []
     for spec_dict in spectrum_batch:
-        result = masst_one_spec(spec_dict, out_dir)
+        result = masst_one_spec(spec_dict, out_dir,
+                                mgf_identifier_field_name=mgf_identifier_field_name, 
+                                min_cos=min_cos, min_peaks=min_peaks, 
+                                ms1_tol=ms1_tol, ms2_tol=ms2_tol, 
+                                analog=analog, analog_mass_below=analog_mass_below, analog_mass_above=analog_mass_above)
         if result is not None:
             results.append(result)
     return results
@@ -146,7 +155,10 @@ def get_processing_stats(batch_results):
     return stats
 
 
-def main_masst_mgf(library_mgf, out_dir, n_cores=None, batch_size=10):
+def main_masst_mgf(library_mgf, out_dir, n_cores=None, batch_size=10,
+                   mgf_identifier_field_name='SPECTRUMID', 
+                   min_cos=0.7, min_peaks=4, ms1_tol=0.05, ms2_tol=0.05, 
+                   analog=False, analog_mass_below=130, analog_mass_above=200):
     """
     Parallel MASST processing of all spectra in an MGF file
     
@@ -184,8 +196,11 @@ def main_masst_mgf(library_mgf, out_dir, n_cores=None, batch_size=10):
     print(f"Processing {len(spectrum_batches)} batches with {n_cores} cores...")
     
     # Create partial function with fixed out_dir
-    process_func = partial(process_spectrum_batch, out_dir=out_dir)
-    
+    process_func = partial(process_spectrum_batch, out_dir=out_dir,
+                           mgf_identifier_field_name=mgf_identifier_field_name, min_cos=min_cos, min_peaks=min_peaks,
+                           ms1_tol=ms1_tol, ms2_tol=ms2_tol,
+                           analog=analog, analog_mass_below=analog_mass_below, analog_mass_above=analog_mass_above)
+
     # Process batches in parallel
     with mp.Pool(n_cores) as pool:
         batch_results = list(tqdm(
@@ -215,5 +230,13 @@ if __name__ == "__main__":
         library_mgf="/home/shipei/projects/synlib/masst/main/data/ms2_all_unique_usi.mgf",
         out_dir="/home/shipei/projects/synlib/masst/main/data/masst_results",
         n_cores=5,
-        batch_size=10
+        batch_size=10,
+        mgf_identifier_field_name='SPECTRUMID',
+        min_cos=0.7,
+        min_peaks=4,
+        ms1_tol=0.05,
+        ms2_tol=0.05,
+        analog=False,
+        analog_mass_below=130,
+        analog_mass_above=200
     )
