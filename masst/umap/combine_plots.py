@@ -139,6 +139,13 @@ def create_combined_pdf(base_umap_dir='masst/umap',
                 
                 # Save page to PDF with high quality
                 pdf.savefig(fig, bbox_inches='tight', dpi=600, facecolor='white')
+                
+                # Save individual rank plot as PNG with
+                png_filename = f"umap_combined_{rank}{suffix}.png"
+                png_path = os.path.join(output_dir, png_filename)
+                fig.savefig(png_path, bbox_inches='tight', dpi=600, facecolor='white')
+                print(f"    Saved PNG: {png_filename}")
+                
                 plt.close(fig)
         
         print(f"PDF saved: {pdf_path}")
@@ -160,8 +167,10 @@ def main(conjugates_only_lst=[False, True]):
     print("\nCombined PDF creation complete!")
     if False in conjugates_only_lst:
         print("  - masst/umap/combined_plots/umap_combined_plots_all.pdf")
+        print("  - Individual PNG files for each rank (all data)")
     if True in conjugates_only_lst:
         print("  - masst/umap/combined_plots/umap_combined_plots_conjugates.pdf")
+        print("  - Individual PNG files for each rank (conjugates only)")
 
 
 if __name__ == "__main__":
