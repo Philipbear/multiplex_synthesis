@@ -46,7 +46,7 @@ def _create_match_scatter_plot(counts_df, data_type, output_prefix):
     plt.rcParams['font.family'] = 'Arial'
     
     # Set up the plot (same size as original)
-    fig, ax = plt.subplots(figsize=(3.5, 1.7))
+    fig, ax = plt.subplots(figsize=(3, 1.7))
     
     # Plot scatter plot (same parameters as original)
     plt.scatter(range(len(counts_df)), counts_df['match_count'], 

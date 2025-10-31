@@ -91,9 +91,17 @@ def merge_microbemasst_tables(out_dir):
 
 
 
-def print_stats():
+def remove_humans_and_print_stats():
     df = pd.read_csv('masst/microbemasst/data/merged_microbemasst_table.tsv', sep='\t')
     print(f"Total entries: {len(df)}")
+    
+    # remove rows with Taxa_NCBI == 9606 (human)
+    df = df[df['Taxa_NCBI'] != 9606].reset_index(drop=True)
+    print(f"Entries after removing human (NCBI Taxonomy ID 9606): {len(df)}")
+    
+    # save cleaned table
+    cleaned_out_path = 'masst/microbemasst/data/merged_microbemasst_table_no_human.tsv'
+    df.to_csv(cleaned_out_path, sep='\t', index=False)
     
     # unique USIs
     unique_usis = df['lib_usi'].nunique()
@@ -118,4 +126,4 @@ if __name__ == '__main__':
     
     #############
     # on local
-    print_stats()
+    remove_humans_and_print_stats()

@@ -10,7 +10,7 @@ def summarize_microbemasst_class_results():
     ms2_df = ms2_df.rename(columns={'usi': 'lib_usi'})
     
     # load microbemasst results
-    all_microbemasst_path = "masst/microbemasst/data/merged_microbemasst_table.tsv"
+    all_microbemasst_path = "masst/microbemasst/data/merged_microbemasst_table_no_human.tsv"
     all_microbemasst_df = pd.read_csv(all_microbemasst_path, sep='\t')
     all_microbemasst_df['Taxa_NCBI'] = all_microbemasst_df['Taxa_NCBI'].astype(str)
     
